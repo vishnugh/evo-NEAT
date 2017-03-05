@@ -10,7 +10,7 @@ import java.util.Random;
 /**
  * Created by vishnu on 7/1/17.
  */
-public class Species {
+public class Species implements Comparable{
     private ArrayList<Genome> genomes = new ArrayList<>();
     private float topFitness = 0;
     private int staleness =0 ;
@@ -98,6 +98,8 @@ public class Species {
     }
 
     public float getTopFitness() {
+        topFitness = getTopGenome().getFitness();
+        topFitness = getTopGenome().getFitness();
         return topFitness;
     }
 
@@ -111,5 +113,19 @@ public class Species {
 
     public void setStaleness(int staleness) {
         this.staleness = staleness;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Species s = (Species)o;
+        float top = getTopFitness();
+        float otherTop = s.getTopFitness();
+
+        if (top==otherTop)
+            return 0;
+        else if(top >otherTop)
+            return 1;
+        else
+            return -1;
     }
 }

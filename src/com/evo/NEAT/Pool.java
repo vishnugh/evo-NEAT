@@ -14,6 +14,8 @@ public class Pool {
 
     private ArrayList<Species> species = new ArrayList<>();
     private int generations = 0;
+    private float topFitness ;
+    private int poolStaleness = 0;
 
 
     public ArrayList<Species> getSpecies() {
@@ -21,7 +23,6 @@ public class Pool {
     }
 
     public void initializePool() {
-        Genome genome = new Genome();
 
         for (int i = 0; i < NEAT_Config.POPULATION; i++) {
             addToSpecies(new Genome());
@@ -139,6 +140,11 @@ public class Pool {
 
     public void removeStaleSpecies(){
         ArrayList<Species> survived = new ArrayList<>();
+
+        if(topFitness<getTopFitness()){
+            poolStaleness = 0;
+        }
+
         for(Species s: species){
             Genome top  = s.getTopGenome();
             if(top.getFitness()>s.getTopFitness()){
@@ -153,7 +159,16 @@ public class Pool {
                 survived.add(s);
             }
         }
+
+        Collections.sort(survived,Collections.reverseOrder());
+
+        if(poolStaleness>NEAT_Config.STALE_POOL){
+            for(int i = survived.size(); i>1 ;i--)
+            survived.remove(i);
+        }
+
         species = survived;
+        poolStaleness++;
     }
 
     public void calculateGenomeAdjustedFitness(){
@@ -221,4 +236,6 @@ public class Pool {
             p += s.getGenomes().size();
         return p;
     }
+
+
 }

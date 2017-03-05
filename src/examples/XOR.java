@@ -47,7 +47,7 @@ public class XOR implements Environment {
             topGenome = pool.getTopGenome();
             System.out.println("TopFitness : " + topGenome.getPoints());
 
-            if(topGenome.getPoints()>15.5){
+            if(topGenome.getPoints()>15){
                 break;
             }
 //            System.out.println("Population : " + pool.getCurrentPopulation() );
@@ -59,5 +59,6 @@ public class XOR implements Environment {
             generation++;
 
         }
+        System.out.println(topGenome.evaluateNetwork(new float[]{1,0})[0]);
     }
 }
