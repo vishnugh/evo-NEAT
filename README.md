@@ -10,3 +10,5 @@ The main function should have a Pool and the Environment instance.
 
 Every generation should call the pool.evaluateFitness(env) and pool.breedNewGeneration().
 The best fitness score of the pool can be accessed by calling pool.getTopGenome().getPoints(). This can be used as a break condition as well. 
+
+An example of the XOR implementation is given in the folder evo-NEAT/src/examples/  .
