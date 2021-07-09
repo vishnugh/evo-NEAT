@@ -6,5 +6,5 @@ package com.evo.NEAT
  *
  */
 interface Environment {
-    fun evaluateFitness(population: ArrayList<Genome>)
+    fun evaluateFitness(population: Iterable<Genome>)
 }

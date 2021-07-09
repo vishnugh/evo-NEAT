@@ -1,6 +1,7 @@
 package com.evo.NEAT.com.evo.NEAT
 
 import kotlin.math.exp
+import kotlin.math.pow
 
 /*
  * Copyright (C) 2004  Derek James and Philip Tucker
@@ -23,13 +24,13 @@ import kotlin.math.exp
  *
  * Created on Feb 26, 2004 by Philip Tucker
  */
- /**
+/**
  * Abstracts activation function for neurons.
  *
  * @author Philip Tucker
  */
 enum class ActivationFunction {
-    
+
     /**
      * Absolute activation function.
      *
@@ -39,48 +40,33 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
 
         /**
          * Return absolute value of `input`, clamped to range [0, 1].
          *
          * @see com.anji.nn.activationfunction.ActivationFunction.apply
          */
-        override fun apply(input: Double): Double {
-            return Math.abs(input)
-        }
-
-        override fun applyDiff(x: Double): Double {
-            return if (x < 0.0) {
-                -1.0
-            } else {
-                1.0 // If x == 0 this is not correct but is probably really rare
-            }
-        }
+        override fun apply(input: Double): Double = Math.abs(input)
+        override fun applyDiff(x: Double) =
+            /* If x == 0 this is not correct but is probably really rare*/
+            if (x < 0.0) -1.0 else 1.0
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
-        override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
-        }
+        override fun getMaxValue(): Double = Float.MAX_VALUE.toDouble()
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
          */
-        override fun getMinValue(): Double {
-            return 0.0
-        }
+        override fun getMinValue(): Double = 0.0
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.cost
          */
-        override fun cost(): Long {
-            return 42
-        }
-    },  
+        override fun cost(): Long = 42
+    },
 
     /**
      * Cosine activation function.
@@ -88,30 +74,17 @@ enum class ActivationFunction {
      * @author Philip Tucker
      */
     CosineActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
-        /**
-         * identifying string
-         */
-        
-
-        
 
         /**
          * Returns cosine(input).
          */
-        override fun apply(input: Double): Double {
-            return Math.cos(input)
-        }
-
-        override fun applyDiff(x: Double): Double {
-            return -Math.sin(x)
-        }
+        override fun apply(input: Double): Double = Math.cos(input)
+        override fun applyDiff(x: Double): Double = -Math.sin(x)
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
-        override fun getMaxValue(): Double {
-            return 1.0
-        }
+        override fun getMaxValue(): Double = 1.0
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
@@ -137,9 +110,7 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
 
         /**
          * Not used, returns 0.
@@ -163,7 +134,7 @@ enum class ActivationFunction {
                 val v = input[0] / input[1]
                 if (java.lang.Double.isNaN(v) || java.lang.Double.isInfinite(v)) {
                     val pos = Math.signum(input[0]) == Math.signum(input[1])
-                    return   (if (pos) Float.MAX_VALUE.toDouble() else -Float.MAX_VALUE.toDouble())
+                    return (if (pos) Float.MAX_VALUE.toDouble() else -Float.MAX_VALUE.toDouble())
                 }
                 return Math.max(-Float.MAX_VALUE.toDouble(), Math.min(Float.MAX_VALUE.toDouble(), v))
             }
@@ -190,7 +161,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 42
         }
-    },  
+    },
 
     /**
      * Modified classic sigmoid. Submitted to NEAT group by zenguyuno@yahoo.com from
@@ -205,9 +176,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -275,10 +245,9 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
+
         private val alpha = 1.0
 
-        
 
         override fun apply(input: Double): Double {
             return if (input < 0) {
@@ -307,7 +276,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 42
         }
-    },  
+    },
 
     /**
      * Gaussian activation function.
@@ -320,9 +289,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -362,7 +330,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 42
         }
-    },  
+    },
 
     /**
      * Inverse absolute value.
@@ -375,9 +343,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -418,7 +385,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 75
         }
-    },  
+    },
 
     /**
      * Linear activation function.
@@ -429,9 +396,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -613,30 +579,34 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    MultiplyActivationFunction /*implements ActivationFunction, ActivationFunctionNonIntegrating*/ {
-        /**
-         * identifying string
-         */
+    /*   MultiplyActivationFunction *//*implements ActivationFunction, ActivationFunctionNonIntegrating*//* {
+        */
+    /**
+     * identifying string
+     *//*
         
 
         
-        /**
-         * This class should only be accessd via ActivationFunctionFactory.
-         */
+        */
+    /**
+     * This class should only be accessd via ActivationFunctionFactory.
+     *//*
         //		MultiplyActivationFunction() {
         //		 no-op
         //		}
-        /**
-         * Not used, use [.apply] as this is a
-         * non-integrating function.
-         */
+        */
+    /**
+     * Not used, use [.apply] as this is a
+     * non-integrating function.
+     *//*
         override fun apply(input: Double): Double {
             return 0.0
         }
 
-        /**
-         * Return result of inputs multiplied together.
-         */
+        */
+    /**
+     * Return result of inputs multiplied together.
+     *//*
         override fun apply(input: DoubleArray, bias: Double): Double {
             if (input.size == 0) {
                 return 0.0
@@ -648,28 +618,31 @@ enum class ActivationFunction {
             return result
         }
 
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
-         */
+        */
+    /**
+     * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+     *//*
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE
         }
 
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
-         */
+        */
+    /**
+     * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+     *//*
         override fun getMinValue(): Double {
             return -Double.MAX_VALUE
         }
 
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
-         */
+        */
+    /**
+     * @see com.anji.nn.activationfunction.ActivationFunction.cost
+     *//*
         override fun cost(): Long {
             return 42
         }
     },
-
+*/
     /**
      * Negative linear activation function.
      */
@@ -677,9 +650,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -730,9 +702,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -743,7 +714,7 @@ enum class ActivationFunction {
          * Not used, returns 0.
          */
         override fun apply(input: Double): Double {
-            return 0.0
+            return input*input
         }
 
         /**
@@ -794,9 +765,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -874,9 +844,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -920,7 +889,57 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 42
         }
-    },  
+    },
+    LeakyRectifierActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+        /**
+         * identifying string
+         */
+
+
+        /**
+         * This class should only be accessd via ActivationFunctionFactory.
+         */
+        //        RectifierActivationFunction() {
+        //            // no-op
+        //        }
+        /**
+         * Returns 0 if the input <= 0, otherwise the input value.
+         *
+         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         */
+        override fun apply(x: Double): Double {
+            return Math.max(-0.01, x)
+        }
+
+        override fun applyDiff(x: Double): Double {
+            return if (x < 0) {
+                0.0
+            } else {
+                1.0
+            }
+        }
+
+        /**
+         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         */
+        override fun getMaxValue(): Double {
+            return Float.MAX_VALUE.toDouble()
+        }
+
+        /**
+         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         */
+        override fun getMinValue(): Double {
+            return 0.0
+        }
+
+        /**
+         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         */
+        override fun cost(): Long {
+            return 42
+        }
+    },
 
     /**
      * Classic Sigmoid.
@@ -931,16 +950,14 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
 
         /**
          * This class should only be accessed via ActivationFunctionFactory.
          */
         //        SigmoidActivationFunction() {
         //        }
-        override fun apply(input: Double): Double = 1.0 / (1.0 +   exp(-input))
+        override fun apply(input: Double): Double = 1.0 / (1.0 + exp(-input))
 
         override fun applyDiff(input: Double): Double {
             val fn = apply(input)
@@ -994,9 +1011,7 @@ enum class ActivationFunction {
         /**
          * id string
          */
-        
 
-        
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.apply
@@ -1039,7 +1054,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 42
         }
-    },  
+    },
 
     /**
      * Step activation function.
@@ -1050,9 +1065,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1064,7 +1078,7 @@ enum class ActivationFunction {
          * ji.nn.activationfunction.ActivationFunction#apply(double)
          */
         override fun apply(input: Double): Double {
-            return  (if (input <= 0) -1.0 else 1.toDouble())
+            return (if (input <= 0) -1.0 else 1.0)
         }
 
         override fun applyDiff(x: Double): Double {
@@ -1091,7 +1105,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 40
         }
-    },  
+    },
 
     /**
      * Sine activation function.
@@ -1102,9 +1116,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1153,9 +1166,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1213,9 +1225,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1267,7 +1278,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 75
         }
-    },  
+    },
 
     /**
      * Steepened Sigmoid with slope of 4.9.
@@ -1280,9 +1291,7 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
 
         /**
          * This class should only be accessed via ActivationFunctionFactory.
@@ -1317,7 +1326,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 497
         }
-    },  
+    },
 
     /**
      * Step activation function.
@@ -1328,9 +1337,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1342,7 +1350,7 @@ enum class ActivationFunction {
          * ji.nn.activationfunction.ActivationFunction#apply(double)
          */
         override fun apply(input: Double): Double {
-            return  (if (input <= 0) 0.0 else 1.toDouble())
+            return (if (input <= 0) 0.0 else 1.toDouble())
         }
 
         override fun applyDiff(x: Double): Double {
@@ -1369,7 +1377,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 40
         }
-    },  
+    },
 
     /**
      * Hyperbolic tangent.
@@ -1380,9 +1388,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1423,7 +1430,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 385
         }
-    },  
+    },
 
     /**
      * Hyperbolic tangent modified to have a "well" around 0. This can be used for
@@ -1436,9 +1443,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1481,7 +1487,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 1231
         }
-    },  
+    },
 
     /**
      * Modified classic sigmoid. Copied from
@@ -1495,9 +1501,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1538,7 +1543,7 @@ enum class ActivationFunction {
         override fun cost(): Long {
             return 497
         }
-    },  
+    },
 
     /**
      * Absolute activation function.
@@ -1549,9 +1554,8 @@ enum class ActivationFunction {
         /**
          * identifying string
          */
-        
 
-        
+
         /**
          * This class should only be accessd via ActivationFunctionFactory.
          */
@@ -1631,9 +1635,7 @@ enum class ActivationFunction {
         /**
          * unique ID string
          */
-        
 
-        
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.apply
@@ -1685,9 +1687,7 @@ enum class ActivationFunction {
         /**
          * unique ID string
          */
-        
 
-        
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.apply
@@ -1762,7 +1762,7 @@ enum class ActivationFunction {
             return 42
         }
     };
- 
+
     /**
      * Apply activation function to input.
      *
@@ -1771,12 +1771,12 @@ enum class ActivationFunction {
      */
     abstract fun apply(input: Double): Double
 
-    open fun apply(input: DoubleArray, bias: Double): Double  {
+    open fun apply(input: DoubleArray, bias: Double): Double {
         TODO()
     }
 
-    open fun applyDiff(x: Double): Double  {
-       TODO()
+    open fun applyDiff(x: Double): Double {
+        TODO()
     }
 
     /**
@@ -1793,5 +1793,5 @@ enum class ActivationFunction {
      * @return number corresponding to cost of activation in resources
      */
     abstract fun cost(): Long
- 
+
 }

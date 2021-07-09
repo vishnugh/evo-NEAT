@@ -3,11 +3,11 @@ package examples
 import com.evo.NEAT.Environment
 import com.evo.NEAT.Genome
 import com.evo.NEAT.Pool
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
 import java.lang.Math.abs
-import java.util.concurrent.Executors
 import kotlin.random.Random
 
 /**
@@ -15,10 +15,10 @@ import kotlin.random.Random
  */
 class XOR : Environment {
     @OptIn(ObsoleteCoroutinesApi::class)
-    override fun evaluateFitness(population: ArrayList<Genome>) {
-        runBlocking(newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(),"population"), ){
+    override fun evaluateFitness(population: Iterable<Genome>) {
+        runBlocking(context) {
 
-                for (gene in population) launch {
+            for (gene in population) launch(context) {
 
                 gene.fitness = FloatArray(17) {
                     val (i, j) = (Random.nextBoolean()) to (Random.nextBoolean())
@@ -27,17 +27,16 @@ class XOR : Environment {
                     val output = gene.evaluateNetwork(inputs)
                     val expected = if (i xor j) 1f else 0f
 
-//                System.err.println(i to j to expected)
-
-                    (1f - abs(expected - output[0])).toFloat()
+                    (1f - abs(expected - output[0]))
                 }.average().toFloat()
             }
         }
     }
 
+
     companion object {
         val xor = XOR()
-
+val context=Genome.context
         @JvmStatic
         fun main(arg0: Array<String>) {
             val pool = Pool()
@@ -49,15 +48,21 @@ class XOR : Environment {
                 pool.evaluateFitness(xor)
                 topGenome = pool.topGenome
                 println("TopFitness : " + topGenome.points)
-                if (topGenome.points > 0.95) break
+
+                if (topGenome.points > 0.95f) {
+                    break
+                }
                 //                System.out.println("Population : " + pool.currentPopulation)
+
                 println("Generation : $generation")
                 //           System.out.println("Total number of matches played : "+TicTacToe.matches);
-                //           pool.calculateGenomeAdjustedFitness();
                 pool.breedNewGeneration()
                 generation++
             }
+
+            System.err.println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}");
             println(topGenome.evaluateNetwork(floatArrayOf(1f, 0f))[0])
+            println ("$topGenome")
         }
     }
 }

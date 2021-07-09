@@ -6,5 +6,8 @@ package com.evo.NEAT
  */
 class NodeGene(var value: Float) {
     var incomingCon = ArrayList<ConnectionGene>()
+    override fun toString(): String {
+        return "NodeGene(value=$value, incomingCon=$incomingCon)"
+    }
 
 }

@@ -19,7 +19,7 @@ class Species : Comparable<Any?> {
     var staleness = 0
     var rand = Random()
 
-    constructor() : super() {}
+    constructor() : super()
     constructor(top: Genome) : super() {
         genomes.add(top)
     }

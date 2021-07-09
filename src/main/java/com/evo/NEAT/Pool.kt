@@ -58,7 +58,9 @@ class Pool {
     // experimental
     private fun rankGlobally() {                // set fitness to rank
         val allGenome = ArrayList<Genome>()
-        for (s in species) for (g in s.genomes) allGenome.add(g)
+        for (s in species)
+            for (g in s.genomes)
+                allGenome.add(g)
         Collections.sort(allGenome)
         //      allGenome.get(allGenome.size()-1).writeTofile();
         //       System.out.println("TopFitness : "+ allGenome.get(allGenome.size()-1).getFitness());
@@ -119,10 +121,7 @@ class Pool {
         poolStaleness++
     }
 
-    fun calculateGenomeAdjustedFitness() {
-        for (s in species) {
-            s.calculateGenomeAdjustedFitness()
-        }
+    fun calculateGenomeAdjustedFitness() { for (s in species) s.calculateGenomeAdjustedFitness()
     }
 
     fun breedNewGeneration(): ArrayList<Genome> {
