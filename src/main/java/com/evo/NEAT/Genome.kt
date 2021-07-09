@@ -1,12 +1,12 @@
 package com.evo.NEAT
 
+import com.evo.NEAT.com.evo.NEAT.ActivationFunction
 import com.evo.NEAT.config.NEAT_Config
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
 import java.util.*
 import javax.management.RuntimeErrorException
-import kotlin.math.exp
 import kotlin.random.Random
 
 /**
@@ -26,9 +26,19 @@ class Genome : Comparable<Genome> {
         }
         fitness = child.fitness
         adjustedFitness = child.adjustedFitness
+        color=child.color
         mutationRates = EnumMap(child.mutationRates)
     }
 
+    var color = listOf(
+        ActivationFunction.SigmoidActivationFunction,
+//        ActivationFunction.RectifierActivationFunction,
+        ActivationFunction.TanhActivationFunction,
+//        ActivationFunction.CosineActivationFunction,
+//        ActivationFunction.NegatedLinearActivationFunction,
+//        ActivationFunction.SqrtActivationFunction
+    ).shuffled()
+        .first()
     var fitness // Global Percentile Rank (higher the better)
             = 0f
     var points = 0f
@@ -92,8 +102,8 @@ class Genome : Comparable<Genome> {
             var sum = 0f
             if (key > NEAT_Config.INPUTS) {
                 for (conn in node.incomingCon)
-                    if (conn.isEnabled) sum += nodes[conn.into]!!.value * conn.weight; node.value =
-                    sigmoid(sum)
+                    if (conn.isEnabled) sum += nodes[conn.into]!!.value * conn.weight
+                node.value = doColor(sum)
             }
         }
         for (i in 0 until NEAT_Config.OUTPUTS) {
@@ -102,9 +112,8 @@ class Genome : Comparable<Genome> {
         return output
     }
 
-    private fun sigmoid(x: Float): Float {
-        // TODO Auto-generated method stub
-        return (1f / (1f + exp(-x)))
+    private fun doColor(x: Float): Float {
+        return color.apply(x.toDouble()).toFloat()
     }
 
     // Mutations
@@ -203,7 +212,7 @@ class Genome : Comparable<Genome> {
     }
 
     fun enableMutate() {
-        //generateNetwork();                // remove laters
+//        generateNetwork();                // remove laters
         if (connectionGeneList.size > 0) {
             val randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
             randomCon.isEnabled = true

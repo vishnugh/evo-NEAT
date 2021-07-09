@@ -1,5 +1,7 @@
 package com.evo.NEAT.com.evo.NEAT
 
+import kotlin.math.exp
+
 /*
  * Copyright (C) 2004  Derek James and Philip Tucker
  *
@@ -470,141 +472,141 @@ enum class ActivationFunction {
             return 42
         }
     },
+//
+//    /**
+//     * Logic AND activation function.
+//     *
+//     * @author Oliver Coleman
+//     */
+//    LogicAndActivationFunction /* extends;
+//
+//	LogicActivationFunction */ {
+//        /**
+//         * identifying string
+//         */
+//
+//
+//
+//
+//        /**
+//         * Returns the result of a logical AND over all inputs, where an input value
+//         * greater than or equal to 0.5 is considered logical true, and less than
+//         * 0.5 false.
+//         *
+//         * @param input
+//         * @param bias
+//         * @return 1 or 0 depending on result of logic operation.
+//         */
+//        override fun apply(input: DoubleArray, bias: Double): Double {
+//            var result = false
+//            for (i in input.indices) {
+//                result = result and (input[i] >= 0.5)
+//            }
+//            return  (if (result) 1.0 else 0.toDouble())
+//        }
+//
+//        override fun getMaxValue(): Double {
+//            return 1.0
+//        }
+//
+//        override fun getMinValue(): Double {
+//            return 0.0
+//        }
+//
+//        override fun cost(): Long {
+//            return 42
+//        }
+//    },
 
-    /**
-     * Logic AND activation function.
-     *
-     * @author Oliver Coleman
-     */
-    LogicAndActivationFunction /* extends;
+//    /**
+//     * Logic OR activation function.
+//     *
+//     * @author Oliver Coleman
+//     */
+//    LogicOrActivationFunction /*extends LogicActivationFunction */ {
+//        /**
+//         * identifying string
+//         */
+//
+//
+//
+//        /**
+//         * This class should only be accessed via ActivationFunctionFactory.
+//         */
+//        //		LogicOrActivationFunction() {
+//        //		}
+//        /**
+//         * Returns the result of a logical OR over all inputs, where an input value
+//         * greater than or equal to 0.5 is considered logical true, and less than
+//         * 0.5 false.
+//         *
+//         * @return 1 or 0 depending on result of logic operation.
+//         */
+//        override fun apply(input: DoubleArray, bias: Double): Double {
+//            var result = false
+//            for (i in input.indices) {
+//                result = result or (input[i] >= 0.5)
+//            }
+//            return  (if (result) 1.0 else 0.toDouble())
+//        }
+//
+//        override fun getMaxValue(): Double {
+//            return 1.0
+//        }
+//
+//        override fun getMinValue(): Double {
+//            return 0.0
+//        }
+//
+//        override fun cost(): Long {
+//            return 42
+//        }
+//    },
 
-	LogicActivationFunction */ {
-        /**
-         * identifying string
-         */
-        
-
-        
-
-        /**
-         * Returns the result of a logical AND over all inputs, where an input value
-         * greater than or equal to 0.5 is considered logical true, and less than
-         * 0.5 false.
-         *
-         * @param input
-         * @param bias
-         * @return 1 or 0 depending on result of logic operation.
-         */
-        override fun apply(input: DoubleArray, bias: Double): Double {
-            var result = false
-            for (i in input.indices) {
-                result = result and (input[i] >= 0.5)
-            }
-            return  (if (result) 1.0 else 0.toDouble())
-        }
-
-        override fun getMaxValue(): Double {
-            return 1.0
-        }
-
-        override fun getMinValue(): Double {
-            return 0.0
-        }
-
-        override fun cost(): Long {
-            return 42
-        }
-    },
-
-    /**
-     * Logic OR activation function.
-     *
-     * @author Oliver Coleman
-     */
-    LogicOrActivationFunction /*extends LogicActivationFunction */ {
-        /**
-         * identifying string
-         */
-        
-
-        
-        /**
-         * This class should only be accessed via ActivationFunctionFactory.
-         */
-        //		LogicOrActivationFunction() {
-        //		}
-        /**
-         * Returns the result of a logical OR over all inputs, where an input value
-         * greater than or equal to 0.5 is considered logical true, and less than
-         * 0.5 false.
-         *
-         * @return 1 or 0 depending on result of logic operation.
-         */
-        override fun apply(input: DoubleArray, bias: Double): Double {
-            var result = false
-            for (i in input.indices) {
-                result = result or (input[i] >= 0.5)
-            }
-            return  (if (result) 1.0 else 0.toDouble())
-        }
-
-        override fun getMaxValue(): Double {
-            return 1.0
-        }
-
-        override fun getMinValue(): Double {
-            return 0.0
-        }
-
-        override fun cost(): Long {
-            return 42
-        }
-    },
-
-    /**
-     * Logic XOR activation function.
-     *
-     * @author Oliver Coleman
-     */
-    LogicXORActivationFunction /*extends LogicActivationFunction */ {
-        /**
-         * identifying string
-         */
-        
-
-        
-
-        override fun getMaxValue(): Double {
-            return 1.0
-        }
-
-        override fun getMinValue(): Double {
-            return 0.0
-        }
-
-        override fun cost(): Long {
-            return 42
-        }
-        /**
-         * This class should only be accessed via ActivationFunctionFactory.
-         */
-        //        LogicXORActivationFunction() {
-        //        }
-        /**
-         * Returns the result of a logical XOR over all inputs, where an input value
-         * greater than or equal to 0.5 is considered logical true, and less than
-         * 0.5 false.
-         *
-         * @return 1 or 0 depending on result of logic operation.
-         */
-        override fun apply(input: DoubleArray, bias: Double): Double {
-            var result = false
-            for (i in input.indices) {
-                result = result xor (input[i] >= 0.5)
-            }
-            return (if (result) 1.0 else 0.toDouble())
-        }
-    },
+//    /**
+//     * Logic XOR activation function.
+//     *
+//     * @author Oliver Coleman
+//     */
+//    LogicXORActivationFunction /*extends LogicActivationFunction */ {
+//        /**
+//         * identifying string
+//         */
+//
+//
+//
+//
+//        override fun getMaxValue(): Double {
+//            return 1.0
+//        }
+//
+//        override fun getMinValue(): Double {
+//            return 0.0
+//        }
+//
+//        override fun cost(): Long {
+//            return 42
+//        }
+//        /**
+//         * This class should only be accessed via ActivationFunctionFactory.
+//         */
+//        //        LogicXORActivationFunction() {
+//        //        }
+//        /**
+//         * Returns the result of a logical XOR over all inputs, where an input value
+//         * greater than or equal to 0.5 is considered logical true, and less than
+//         * 0.5 false.
+//         *
+//         * @return 1 or 0 depending on result of logic operation.
+//         */
+//        override fun apply(input: DoubleArray, bias: Double): Double {
+//            var result = false
+//            for (i in input.indices) {
+//                result = result xor (input[i] >= 0.5)
+//            }
+//            return (if (result) 1.0 else 0.toDouble())
+//        }
+//    },
 
     /**
      * Multiply activation function.
@@ -938,9 +940,7 @@ enum class ActivationFunction {
          */
         //        SigmoidActivationFunction() {
         //        }
-        override fun apply(input: Double): Double {
-            return 1.0 / (1.0 + Math.exp(-input))
-        }
+        override fun apply(input: Double): Double = 1.0 / (1.0 +   exp(-input))
 
         override fun applyDiff(input: Double): Double {
             val fn = apply(input)
@@ -1769,9 +1769,7 @@ enum class ActivationFunction {
      * @param input
      * @return double result of applying activation function to `input`
      */
-    open fun apply(input: Double): Double {
-        TODO()
-    }
+    abstract fun apply(input: Double): Double
 
     open fun apply(input: DoubleArray, bias: Double): Double  {
         TODO()
