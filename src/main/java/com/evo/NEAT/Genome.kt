@@ -26,17 +26,17 @@ class Genome : Comparable<Genome> {
         }
         fitness = child.fitness
         adjustedFitness = child.adjustedFitness
-        color=child.color
         mutationRates = EnumMap(child.mutationRates)
+//        color = child.color
     }
 
     var color = listOf(
         ActivationFunction.SigmoidActivationFunction,
-//        ActivationFunction.RectifierActivationFunction,
+        ActivationFunction.RectifierActivationFunction,
         ActivationFunction.TanhActivationFunction,
-//        ActivationFunction.CosineActivationFunction,
-//        ActivationFunction.NegatedLinearActivationFunction,
-//        ActivationFunction.SqrtActivationFunction
+        ActivationFunction.CosineActivationFunction,
+        ActivationFunction.NegatedLinearActivationFunction,
+        ActivationFunction.SqrtActivationFunction
     ).shuffled()
         .first()
     var fitness // Global Percentile Rank (higher the better)
@@ -95,9 +95,7 @@ class Genome : Comparable<Genome> {
     fun evaluateNetwork(inputs: FloatArray): FloatArray {
         val output = FloatArray(NEAT_Config.OUTPUTS)
         generateNetwork()
-        for (i in 0 until NEAT_Config.INPUTS) {
-            nodes[i]!!.value = inputs[i]
-        }
+        for (i in 0 until NEAT_Config.INPUTS) nodes[i]!!.value = inputs[i]
         for ((key, node) in nodes) {
             var sum = 0f
             if (key > NEAT_Config.INPUTS) {
@@ -106,9 +104,8 @@ class Genome : Comparable<Genome> {
                 node.value = doColor(sum)
             }
         }
-        for (i in 0 until NEAT_Config.OUTPUTS) {
-            output[i] = nodes[NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES + i]!!.value
-        }
+        val i1 = NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES
+        for (i in 0 until NEAT_Config.OUTPUTS) output[i] = nodes[i1 + i]!!.value;
         return output
     }
 
@@ -125,9 +122,7 @@ class Genome : Comparable<Genome> {
         }
         (MutationKeys.WEIGHT_MUTATION_CHANCE.ordinal..MutationKeys.ENABLE_MUTATION_CHANCE.ordinal).forEach {
             MutationKeys.values()[it].let { mk ->
-                if (this.mutationRates[mk]!!.toFloat() > rand.nextFloat()) {
-                    mk.fn(this)
-                }
+                if (this.mutationRates[mk]!!.toFloat() > rand.nextFloat()) mk.fn(this)
             }
         }
     }
@@ -136,7 +131,8 @@ class Genome : Comparable<Genome> {
         for (c in connectionGeneList) {
             if (rand.nextFloat() < NEAT_Config.WEIGHT_CHANCE) {
                 if (rand.nextFloat() < NEAT_Config.PERTURB_CHANCE) c.weight =
-                    c.weight + (2 * rand.nextFloat() - 1) * NEAT_Config.STEPS else c.weight = 4 * rand.nextFloat() - 2
+                    c.weight + (rand.nextDouble(-1.0, (1.0 + Float.MIN_VALUE))
+                        .toFloat()) * NEAT_Config.STEPS else c.weight = rand.nextDouble(-2.0, 2.0).toFloat()
             }
         }
     }
@@ -309,8 +305,6 @@ class Genome : Comparable<Genome> {
 
         @JvmStatic
         fun isSameSpecies(g1: Genome, g2: Genome): Boolean {
-
-
             val geneMap1 = g1.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
                 .toMap(sortedMapOf())//.toSortedMap()
             val geneMap2 = g2.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }

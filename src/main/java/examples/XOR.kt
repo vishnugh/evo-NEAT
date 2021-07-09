@@ -3,6 +3,8 @@ package examples
 import com.evo.NEAT.Environment
 import com.evo.NEAT.Genome
 import com.evo.NEAT.Pool
+import java.lang.Math.abs
+import kotlin.math.pow
 
 /**
  * Created by vishnughosh on 05/03/17.
@@ -12,16 +14,18 @@ class XOR : Environment {
         for (gene in population) {
             var fitness = 0f
             gene.fitness = 0f
-            for (i in 0..1) for (j in 0..1) {
-                val inputs = floatArrayOf(i.toFloat(), j.toFloat())
-                val output = gene.evaluateNetwork(inputs)
-                val expected = i xor j
-                //                  System.out.println("Inputs are " + inputs[0] +" " + inputs[1] + " output " + output[0] + " Answer : " + (i ^ j));
-                //if (output[0] == (i ^ j))
-                fitness += 1 - Math.abs(expected - output[0])
-            }
-            fitness = fitness * fitness
-            gene.fitness = fitness
+            var r = listOf<Float>()
+            for (i in 0..1)
+                for (j in 0..1) {
+                    val inputs = floatArrayOf(i.toFloat(), j.toFloat())
+                    val output = gene.evaluateNetwork(inputs)
+                    val expected = i xor j
+//                    System.out.println("Inputs are ${i to j} output ${output[0]} Answer : ${i xor j}")
+
+                    val fl = 1f - abs(expected.toFloat() - output[0])
+                    r += fl
+                }
+            gene.fitness = r.average().toFloat()
         }
     }
 
@@ -39,10 +43,8 @@ class XOR : Environment {
                 pool.evaluateFitness(xor)
                 topGenome = pool.topGenome
                 println("TopFitness : " + topGenome.points)
-                if (topGenome.points > 15) {
-                    break
-                }
-                //            System.out.println("Population : " + pool.getCurrentPopulation() );
+                if (topGenome.points > 0.95) break
+                //                System.out.println("Population : " + pool.currentPopulation)
                 println("Generation : $generation")
                 //           System.out.println("Total number of matches played : "+TicTacToe.matches);
                 //           pool.calculateGenomeAdjustedFitness();

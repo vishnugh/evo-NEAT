@@ -35,26 +35,6 @@ class Pool {
         species.add(childSpecies)
     }
 
-    fun evaluateFitness() {         //For Testing
-        for (s in species) for (g in s.genomes) {
-            var fitness = 0f
-            g.fitness = 0f
-            for (i in 0..1) for (j in 0..1) {
-                val inputs = floatArrayOf(i.toFloat(), j.toFloat())
-                val output = g.evaluateNetwork(inputs)
-                val expected = i xor j
-                //                  System.out.println("Inputs are " + inputs[0] +" " + inputs[1] + " output " + output[0] + " Answer : " + (i ^ j));
-                //if (output[0] == (i ^ j))
-                fitness += 1 - Math.abs(expected - output[0])
-            }
-            fitness = fitness * fitness // * fitness * fitness;
-            if (fitness > 15) println("Fitness : $fitness")
-            g.fitness = fitness
-            //System.out.println("Fitness : "+fitness);
-        }
-        rankGlobally()
-    }
-
     fun evaluateFitness(environment: Environment) {
         val allGenome = ArrayList<Genome>()
         for (s in species) {
@@ -78,11 +58,7 @@ class Pool {
     // experimental
     private fun rankGlobally() {                // set fitness to rank
         val allGenome = ArrayList<Genome>()
-        for (s in species) {
-            for (g in s.genomes) {
-                allGenome.add(g)
-            }
-        }
+        for (s in species) for (g in s.genomes) allGenome.add(g)
         Collections.sort(allGenome)
         //      allGenome.get(allGenome.size()-1).writeTofile();
         //       System.out.println("TopFitness : "+ allGenome.get(allGenome.size()-1).getFitness());
@@ -114,10 +90,9 @@ class Pool {
     }
 
     fun removeWeakGenomesFromSpecies(allButOne: Boolean) {
-        for (s in species) {
-            s.removeWeakGenomes(allButOne)
-        }
+        for (s in species) s.removeWeakGenomes(allButOne)
     }
+
 
     fun removeStaleSpecies() {
         val survived = ArrayList<Species>()

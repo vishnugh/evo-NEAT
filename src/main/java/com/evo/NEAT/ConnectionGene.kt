@@ -35,13 +35,13 @@ class ConnectionGene {
     }
 
     override fun toString(): String {
-/*        return "ConnectionGene{" +
+        return "ConnectionGene{" +
                 "into=" + into +
                 ", out=" + out +
                 ", innovation=" + innovation +
                 ", weight=" + weight +
-                ", enabled=" + enabled +
-                '}';*/
+                ", enabled=" + isEnabled +
+                '}';
         return into.toString() + "," + out + "," + weight + "," + isEnabled
     }
 }
