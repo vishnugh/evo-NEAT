@@ -19,18 +19,19 @@ class Pool {
         }
     }
 
-    fun addToSpecies(g: Genome?) {
+    fun addToSpecies(g: Genome) {
         for (s in species) {
-            if (s.genomes.size == 0) continue
-            val g0 = s.genomes[0]
-            //		System.out.println(s.genomes.size());
-            if (isSameSpecies(g!!, g0)) {
-                s.genomes.add(g)
-                return
+            if (s.genomes.size != 0) {
+                val g0 = s.genomes[0]
+                //		System.out.println(s.genomes.size());
+                if (isSameSpecies(g, g0)) {
+                    s.genomes.add(g)
+                    return
+                }
             }
         }
         val childSpecies = Species()
-        childSpecies.genomes.add(g!!)
+        childSpecies.genomes.add(g)
         species.add(childSpecies)
     }
 

@@ -1,18 +1,18 @@
 package com.evo.NEAT
 
 import com.evo.NEAT.config.NEAT_Config
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
 import java.util.*
 import javax.management.RuntimeErrorException
+import kotlin.math.exp
+import kotlin.random.Random
 
 /**
  * Created by vishnughosh on 28/02/17.
  */
-class Genome : Comparable<Any?> {
+class Genome : Comparable<Genome> {
     constructor() {
         mutationRates = MutationKeys.mutationRates
     }
@@ -34,8 +34,8 @@ class Genome : Comparable<Any?> {
     var points = 0f
 
     // Can remove below setter-getter after testing
-    var connectionGeneList = ArrayList<ConnectionGene>() // DNA- MAin archive of gene information
-    var nodes = TreeMap<Int, NodeGene>() // Generated while performing network operation
+    var connectionGeneList: MutableList<ConnectionGene> = ArrayList() // DNA- MAin archive of gene information
+    var nodes: SortedMap<Int, NodeGene> = TreeMap() // Generated while performing network operation
     var adjustedFitness // For number of child to breed in species
             = 0f
     private var mutationRates = EnumMap(MutationKeys.mutationRates)
@@ -91,12 +91,9 @@ class Genome : Comparable<Any?> {
         for ((key, node) in nodes) {
             var sum = 0f
             if (key > NEAT_Config.INPUTS) {
-                for (conn in node.incomingCon) {
-                    if (conn.isEnabled) {
-                        sum += nodes[conn.into]!!.value * conn.weight
-                    }
-                }
-                node.value = sigmoid(sum)
+                for (conn in node.incomingCon)
+                    if (conn.isEnabled) sum += nodes[conn.into]!!.value * conn.weight; node.value =
+                    sigmoid(sum)
             }
         }
         for (i in 0 until NEAT_Config.OUTPUTS) {
@@ -107,7 +104,7 @@ class Genome : Comparable<Any?> {
 
     private fun sigmoid(x: Float): Float {
         // TODO Auto-generated method stub
-        return (1 / (1 + Math.exp(-4.9 * x))).toFloat()
+        return (1f / (1f + exp(-x)))
     }
 
     // Mutations
@@ -124,7 +121,7 @@ class Genome : Comparable<Any?> {
                 }
             }
         }
-     }
+    }
 
     fun mutateWeight() {
         for (c in connectionGeneList) {
@@ -213,10 +210,7 @@ class Genome : Comparable<Any?> {
         }
     }
 
-    override fun compareTo(o: Any?): Int {
-        val g = o as Genome?
-        return if (fitness == g!!.fitness) 0 else if (fitness > g.fitness) 1 else -1
-    }
+    override fun compareTo(other: Genome): Int = fitness.compareTo(other.fitness)
 
     override fun toString(): String {
         return "Genome{" +
@@ -254,7 +248,7 @@ class Genome : Comparable<Any?> {
     }
 
     companion object {
-        private val rand = Random()
+        private val rand = Random
 
         @JvmStatic
         fun crossOver(parent1: Genome, parent2: Genome): Genome {
@@ -313,44 +307,39 @@ class Genome : Comparable<Any?> {
             val geneMap2 = g2.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
                 .toMap(sortedMapOf())//.toSortedMap()
 
-
-            var matching = 0
-            var disjoint = 0
-            var excess = 0
-            var weight = 0f
             val lowMaxInnovation: Int = when {
                 geneMap1.isEmpty() || geneMap2.isEmpty() -> 0
                 else -> Math.min(geneMap1.lastKey(), geneMap2.lastKey())
             }
+
             val keys1 = geneMap1.keys
             val keys2 = geneMap2.keys
-            val intersect = keys1.intersect(keys2)
-            runBlocking {
-                launch {
-                    launch {
-                        intersect.forEach {
-                            matching++
-                            weight += Math.abs(geneMap1[it]!!.weight - geneMap2[it]!!.weight)
-                        }
-                    }
-                    launch {
 
-                        (keys1 + keys2).minus(intersect).forEach {
-                            when {
-                                it < lowMaxInnovation -> disjoint++
-                                else -> excess++
-                            }
-                        }
+            (keys1 + keys2).toMutableSet().let { remainder ->
+                var matching = 0
+                var disjoint = 0
+                var excess = 0
+                var weight = 0f
+                keys1.intersect(keys2).forEach {
+                    remainder -= it
+                    matching++
+                    weight += Math.abs(geneMap1[it]!!.weight - geneMap2[it]!!.weight)
+                }
+                remainder.forEach {
+                    when {
+                        it < lowMaxInnovation -> disjoint++
+                        else -> excess++
                     }
-                }.join()
+                }
+                //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
+                return ((matching + disjoint + excess).takeIf { N -> N < 0 }?.let { N ->
+                    (NEAT_Config.EXCESS_COEFFICENT * excess + NEAT_Config.DISJOINT_COEFFICENT * disjoint) / N + NEAT_Config.WEIGHT_COEFFICENT * weight / matching
+                } ?: 0f).let { delta ->
+                    delta < NEAT_Config.COMPATIBILITY_THRESHOLD
+                }
+
             }
-
-            //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
-            var delta = 0f
-            val N = matching + disjoint + excess
-            if (N > 0) delta =
-                (NEAT_Config.EXCESS_COEFFICENT * excess + NEAT_Config.DISJOINT_COEFFICENT * disjoint) / N + NEAT_Config.WEIGHT_COEFFICENT * weight / matching
-            return delta < NEAT_Config.COMPATIBILITY_THRESHOLD
         }
     }
 }
+
