@@ -8,8 +8,8 @@ import com.evo.NEAT.Pool
  * Created by vishnughosh on 05/03/17.
  */
 class XOR : Environment {
-    override fun evaluateFitness(population: ArrayList<Genome>?) {
-        for (gene in population!!) {
+    override fun evaluateFitness(population: ArrayList<Genome>) {
+        for (gene in population) {
             var fitness = 0f
             gene.fitness = 0f
             for (i in 0..1) for (j in 0..1) {

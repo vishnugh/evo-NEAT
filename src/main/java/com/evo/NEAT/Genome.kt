@@ -1,6 +1,8 @@
 package com.evo.NEAT
 
 import com.evo.NEAT.config.NEAT_Config
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
@@ -11,72 +13,53 @@ import javax.management.RuntimeErrorException
  * Created by vishnughosh on 28/02/17.
  */
 class Genome : Comparable<Any?> {
-    var fitness // Global Percentile Rank (higher the better)
-            = 0f
-    var points = 0f
-
-    // Can remove below setter-getter after testing
-    var connectionGeneList = ArrayList<ConnectionGene?>() // DNA- MAin archive of gene information
-    private val nodes = TreeMap<Int, NodeGene>() // Generated while performing network operation
-    var adjustedFitness // For number of child to breed in species
-            = 0f
-    private var mutationRates = HashMap<MutationKeys, Float>()
-
-    private enum class MutationKeys {
-        STEPS,
-        PERTURB_CHANCE,
-        WEIGHT_CHANCE,
-        WEIGHT_MUTATION_CHANCE,
-        NODE_MUTATION_CHANCE,
-        CONNECTION_MUTATION_CHANCE,
-        BIAS_CONNECTION_MUTATION_CHANCE,
-        DISABLE_MUTATION_CHANCE,
-        ENABLE_MUTATION_CHANCE
-    }
-
-    /*    private class MutationRates{
-            float STEPS;
-            float PERTURB_CHANCE;
-            float WEIGHT_CHANCE;
-            float WEIGHT_MUTATION_CHANCE;
-            float NODE_MUTATION_CHANCE;
-            float CONNECTION_MUTATION_CHANCE;
-            float BIAS_CONNECTION_MUTATION_CHANCE;
-            float DISABLE_MUTATION_CHANCE;
-            float ENABLE_MUTATION_CHANCE;
-
-             MutationRates() {
-                this.STEPS = NEAT_Config.STEPS;
-                this.PERTURB_CHANCE = NEAT_Config.PERTURB_CHANCE;
-                this.WEIGHT_CHANCE = NEAT_Config.WEIGHT_CHANCE;
-                this.WEIGHT_MUTATION_CHANCE = NEAT_Config.WEIGHT_MUTATION_CHANCE;
-                this.NODE_MUTATION_CHANCE = NEAT_Config.NODE_MUTATION_CHANCE;
-                this.CONNECTION_MUTATION_CHANCE = NEAT_Config.CONNECTION_MUTATION_CHANCE;
-                this.BIAS_CONNECTION_MUTATION_CHANCE = NEAT_Config.BIAS_CONNECTION_MUTATION_CHANCE;
-                this.DISABLE_MUTATION_CHANCE = NEAT_Config.DISABLE_MUTATION_CHANCE;
-                this.ENABLE_MUTATION_CHANCE = NEAT_Config.ENABLE_MUTATION_CHANCE;
-            }
-        }*/
     constructor() {
-        mutationRates[MutationKeys.STEPS] = NEAT_Config.STEPS
-        mutationRates[MutationKeys.PERTURB_CHANCE] = NEAT_Config.PERTURB_CHANCE
-        mutationRates[MutationKeys.WEIGHT_CHANCE] = NEAT_Config.WEIGHT_CHANCE
-        mutationRates[MutationKeys.WEIGHT_MUTATION_CHANCE] = NEAT_Config.WEIGHT_MUTATION_CHANCE
-        mutationRates[MutationKeys.NODE_MUTATION_CHANCE] = NEAT_Config.NODE_MUTATION_CHANCE
-        mutationRates[MutationKeys.CONNECTION_MUTATION_CHANCE] = NEAT_Config.CONNECTION_MUTATION_CHANCE
-        mutationRates[MutationKeys.BIAS_CONNECTION_MUTATION_CHANCE] = NEAT_Config.BIAS_CONNECTION_MUTATION_CHANCE
-        mutationRates[MutationKeys.DISABLE_MUTATION_CHANCE] = NEAT_Config.DISABLE_MUTATION_CHANCE
-        mutationRates[MutationKeys.ENABLE_MUTATION_CHANCE] = NEAT_Config.ENABLE_MUTATION_CHANCE
+        mutationRates = MutationKeys.mutationRates
     }
 
     constructor(child: Genome) {
+        this.connectionGeneList = ArrayList<ConnectionGene>()
+        this.nodes = TreeMap<Int, NodeGene>()
+        this.mutationRates = MutationKeys.mutationRates
         for (c in child.connectionGeneList) {
             connectionGeneList.add(ConnectionGene(c))
         }
         fitness = child.fitness
         adjustedFitness = child.adjustedFitness
-        mutationRates = child.mutationRates.clone() as HashMap<MutationKeys, Float>
+        mutationRates = EnumMap(child.mutationRates)
     }
+
+    var fitness // Global Percentile Rank (higher the better)
+            = 0f
+    var points = 0f
+
+    // Can remove below setter-getter after testing
+    var connectionGeneList = ArrayList<ConnectionGene>() // DNA- MAin archive of gene information
+    var nodes = TreeMap<Int, NodeGene>() // Generated while performing network operation
+    var adjustedFitness // For number of child to breed in species
+            = 0f
+    private var mutationRates = EnumMap(MutationKeys.mutationRates)
+
+    enum class MutationKeys(val cfg: Number, val fn: ((Genome) -> Unit) = {/* no-op */ }) {
+        STEPS(NEAT_Config.STEPS),
+        PERTURB_CHANCE(NEAT_Config.PERTURB_CHANCE),
+        WEIGHT_CHANCE(NEAT_Config.WEIGHT_CHANCE),
+        WEIGHT_MUTATION_CHANCE(NEAT_Config.WEIGHT_MUTATION_CHANCE, Genome::mutateWeight),
+        NODE_MUTATION_CHANCE(NEAT_Config.NODE_MUTATION_CHANCE, { it.mutateAddConnection(false) }),
+        CONNECTION_MUTATION_CHANCE(NEAT_Config.CONNECTION_MUTATION_CHANCE, { it.mutateAddConnection(true) }),
+        BIAS_CONNECTION_MUTATION_CHANCE(NEAT_Config.BIAS_CONNECTION_MUTATION_CHANCE, Genome::mutateAddNode),
+        DISABLE_MUTATION_CHANCE(NEAT_Config.DISABLE_MUTATION_CHANCE, Genome::disableMutate),
+        ENABLE_MUTATION_CHANCE(NEAT_Config.ENABLE_MUTATION_CHANCE, Genome::enableMutate),
+        ;
+
+        companion object {
+            val mutationRates
+                get() = EnumMap<MutationKeys, Number>(MutationKeys::class.java).apply {
+                    values().forEach { mutationKeys: MutationKeys -> put(mutationKeys, mutationKeys.cfg) }
+                }
+        }
+    }
+
 
     private fun generateNetwork() {
         nodes.clear()
@@ -93,7 +76,7 @@ class Genome : Comparable<Any?> {
 
         // hidden layer
         for (con in connectionGeneList) {
-            if (!nodes.containsKey(con!!.into)) nodes[con.into] = NodeGene(0f)
+            if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0f)
             if (!nodes.containsKey(con.out)) nodes[con.out] = NodeGene(0f)
             nodes[con.out]!!.incomingCon.add(con)
         }
@@ -131,21 +114,23 @@ class Genome : Comparable<Any?> {
     fun Mutate() {
         // Mutate mutation rates
         for ((key, value) in mutationRates) {
-            if (rand.nextBoolean()) mutationRates[key] = 0.95f * value else mutationRates[key] = 1.05263f * value
+            if (rand.nextBoolean()) mutationRates[key] = 0.95f * value.toFloat() else mutationRates[key] =
+                1.05263f * value.toFloat()
         }
-        if (rand.nextFloat() <= mutationRates[MutationKeys.WEIGHT_MUTATION_CHANCE]!!) mutateWeight()
-        if (rand.nextFloat() <= mutationRates[MutationKeys.CONNECTION_MUTATION_CHANCE]!!) mutateAddConnection(false)
-        if (rand.nextFloat() <= mutationRates[MutationKeys.BIAS_CONNECTION_MUTATION_CHANCE]!!) mutateAddConnection(true)
-        if (rand.nextFloat() <= mutationRates[MutationKeys.NODE_MUTATION_CHANCE]!!) mutateAddNode()
-        if (rand.nextFloat() <= mutationRates[MutationKeys.DISABLE_MUTATION_CHANCE]!!) disableMutate()
-        if (rand.nextFloat() <= mutationRates[MutationKeys.ENABLE_MUTATION_CHANCE]!!) enableMutate()
-    }
+        (MutationKeys.WEIGHT_MUTATION_CHANCE.ordinal..MutationKeys.ENABLE_MUTATION_CHANCE.ordinal).forEach {
+            MutationKeys.values()[it].let { mk ->
+                if (this.mutationRates[mk]!!.toFloat() > rand.nextFloat()) {
+                    mk.fn(this)
+                }
+            }
+        }
+     }
 
     fun mutateWeight() {
         for (c in connectionGeneList) {
             if (rand.nextFloat() < NEAT_Config.WEIGHT_CHANCE) {
-                if (rand.nextFloat() < NEAT_Config.PERTURB_CHANCE) c!!.weight =
-                    c.weight + (2 * rand.nextFloat() - 1) * NEAT_Config.STEPS else c!!.weight = 4 * rand.nextFloat() - 2
+                if (rand.nextFloat() < NEAT_Config.PERTURB_CHANCE) c.weight =
+                    c.weight + (2 * rand.nextFloat() - 1) * NEAT_Config.STEPS else c.weight = 4 * rand.nextFloat() - 2
             }
         }
     }
@@ -192,7 +177,7 @@ class Genome : Comparable<Any?> {
         if (connectionGeneList.size > 0) {
             var timeoutCount = 0
             var randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
-            while (!randomCon!!.isEnabled) {
+            while (!randomCon.isEnabled) {
                 randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
                 timeoutCount++
                 if (timeoutCount > NEAT_Config.HIDDEN_NODES) return
@@ -216,7 +201,7 @@ class Genome : Comparable<Any?> {
         //generateNetwork();                // remove laters
         if (connectionGeneList.size > 0) {
             val randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
-            randomCon!!.isEnabled = false
+            randomCon.isEnabled = false
         }
     }
 
@@ -224,7 +209,7 @@ class Genome : Comparable<Any?> {
         //generateNetwork();                // remove laters
         if (connectionGeneList.size > 0) {
             val randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
-            randomCon!!.isEnabled = true
+            randomCon.isEnabled = true
         }
     }
 
@@ -247,7 +232,7 @@ class Genome : Comparable<Any?> {
         val builder = StringBuilder()
         for (conn in connectionGeneList) {
             builder.append("""
-    ${conn.toString()}
+    $conn
     
     """.trimIndent())
         }
@@ -284,18 +269,18 @@ class Genome : Comparable<Any?> {
             val geneMap1 = TreeMap<Int, ConnectionGene?>()
             val geneMap2 = TreeMap<Int, ConnectionGene?>()
             for (con in parent1.connectionGeneList) {
-                assert(!geneMap1.containsKey(con!!.innovation) //TODO Remove for better performance
+                assert(!geneMap1.containsKey(con.innovation) //TODO Remove for better performance
                 )
                 geneMap1[con.innovation] = con
             }
             for (con in parent2.connectionGeneList) {
-                assert(!geneMap2.containsKey(con!!.innovation) //TODO Remove for better performance
+                assert(!geneMap2.containsKey(con.innovation) //TODO Remove for better performance
                 )
                 geneMap2[con.innovation] = con
             }
             val innovationP1: Set<Int> = geneMap1.keys
             val innovationP2: Set<Int> = geneMap2.keys
-            val allInnovations: MutableSet<Int> = HashSet(innovationP1)
+            val allInnovations: MutableSet<Int> = LinkedHashSet(innovationP1)
             allInnovations.addAll(innovationP2)
             for (key in allInnovations) {
                 var trait: ConnectionGene?
@@ -314,51 +299,54 @@ class Genome : Comparable<Any?> {
                         continue
                     }
                 } else trait = geneMap1[key]
-                child.connectionGeneList.add(trait)
+                trait?.let { child.connectionGeneList.add(it) }
             }
             return child
         }
 
         @JvmStatic
         fun isSameSpecies(g1: Genome, g2: Genome): Boolean {
-            val geneMap1 = TreeMap<Int, ConnectionGene?>()
-            val geneMap2 = TreeMap<Int, ConnectionGene?>()
+
+
+            val geneMap1 = g1.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
+                .toMap(sortedMapOf())//.toSortedMap()
+            val geneMap2 = g2.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
+                .toMap(sortedMapOf())//.toSortedMap()
+
+
             var matching = 0
             var disjoint = 0
             var excess = 0
             var weight = 0f
-            val lowMaxInnovation: Int
-            var delta = 0f
-            for (con in g1.connectionGeneList) {
-                assert(!geneMap1.containsKey(con!!.innovation) //TODO Remove for better performance
-                )
-                geneMap1[con.innovation] = con
+            val lowMaxInnovation: Int = when {
+                geneMap1.isEmpty() || geneMap2.isEmpty() -> 0
+                else -> Math.min(geneMap1.lastKey(), geneMap2.lastKey())
             }
-            for (con in g2.connectionGeneList) {
-                assert(!geneMap2.containsKey(con!!.innovation) //TODO Remove for better performance
-                )
-                geneMap2[con.innovation] = con
-            }
-            lowMaxInnovation =
-                if (geneMap1.isEmpty() || geneMap2.isEmpty()) 0 else Math.min(geneMap1.lastKey(), geneMap2.lastKey())
-            val innovationP1: Set<Int> = geneMap1.keys
-            val innovationP2: Set<Int> = geneMap2.keys
-            val allInnovations: MutableSet<Int> = HashSet(innovationP1)
-            allInnovations.addAll(innovationP2)
-            for (key in allInnovations) {
-                if (geneMap1.containsKey(key) && geneMap2.containsKey(key)) {
-                    matching++
-                    weight += Math.abs(geneMap1[key]!!.weight - geneMap2[key]!!.weight)
-                } else {
-                    if (key < lowMaxInnovation) {
-                        disjoint++
-                    } else {
-                        excess++
+            val keys1 = geneMap1.keys
+            val keys2 = geneMap2.keys
+            val intersect = keys1.intersect(keys2)
+            runBlocking {
+                launch {
+                    launch {
+                        intersect.forEach {
+                            matching++
+                            weight += Math.abs(geneMap1[it]!!.weight - geneMap2[it]!!.weight)
+                        }
                     }
-                }
+                    launch {
+
+                        (keys1 + keys2).minus(intersect).forEach {
+                            when {
+                                it < lowMaxInnovation -> disjoint++
+                                else -> excess++
+                            }
+                        }
+                    }
+                }.join()
             }
 
             //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
+            var delta = 0f
             val N = matching + disjoint + excess
             if (N > 0) delta =
                 (NEAT_Config.EXCESS_COEFFICENT * excess + NEAT_Config.DISJOINT_COEFFICENT * disjoint) / N + NEAT_Config.WEIGHT_COEFFICENT * weight / matching

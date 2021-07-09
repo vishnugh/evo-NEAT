@@ -166,14 +166,14 @@ class Pool {
                 nchild++
                 carryOver -= 1f
             }
-            if (nchild < 1) continue
-            survived.add(Species(s.topGenome))
-            //s.removeWeakGenome(nchild);
-
-            //children.add(s.getTopGenome());
-            for (i in 1 until nchild) {
-                val child = s.breedChild()
-                children.add(child)
+            if (1 <= nchild) {
+                survived.add(Species(s.topGenome))
+                //s.removeWeakGenome(nchild);
+                //children.add(s.getTopGenome());
+                for (i in 1 until nchild) {
+                    val child = s.breedChild()
+                    children.add(child)
+                }
             }
         }
         species = survived
