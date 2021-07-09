@@ -3,29 +3,35 @@ package examples
 import com.evo.NEAT.Environment
 import com.evo.NEAT.Genome
 import com.evo.NEAT.Pool
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import java.lang.Math.abs
-import kotlin.math.pow
+import java.util.concurrent.Executors
+import kotlin.random.Random
 
 /**
  * Created by vishnughosh on 05/03/17.
  */
 class XOR : Environment {
+    @OptIn(ObsoleteCoroutinesApi::class)
     override fun evaluateFitness(population: ArrayList<Genome>) {
-        for (gene in population) {
-            var fitness = 0f
-            gene.fitness = 0f
-            var r = listOf<Float>()
-            for (i in 0..1)
-                for (j in 0..1) {
-                    val inputs = floatArrayOf(i.toFloat(), j.toFloat())
-                    val output = gene.evaluateNetwork(inputs)
-                    val expected = i xor j
-//                    System.out.println("Inputs are ${i to j} output ${output[0]} Answer : ${i xor j}")
+        runBlocking(newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(),"population"), ){
 
-                    val fl = 1f - abs(expected.toFloat() - output[0])
-                    r += fl
-                }
-            gene.fitness = r.average().toFloat()
+                for (gene in population) launch {
+
+                gene.fitness = FloatArray(17) {
+                    val (i, j) = (Random.nextBoolean()) to (Random.nextBoolean())
+
+                    val inputs = floatArrayOf(if (i) 1f else 0f, if (j) 1f else 0f)
+                    val output = gene.evaluateNetwork(inputs)
+                    val expected = if (i xor j) 1f else 0f
+
+//                System.err.println(i to j to expected)
+
+                    (1f - abs(expected - output[0])).toFloat()
+                }.average().toFloat()
+            }
         }
     }
 
