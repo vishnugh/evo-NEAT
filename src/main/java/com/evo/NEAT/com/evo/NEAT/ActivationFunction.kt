@@ -55,7 +55,7 @@ enum class ActivationFunction {
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
-        override fun getMaxValue(): Double = Float.MAX_VALUE.toDouble()
+        override fun getMaxValue(): Double = Double.MAX_VALUE.toDouble()
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
@@ -121,7 +121,7 @@ enum class ActivationFunction {
 
         /**
          * Return first input divided by second input (or just first input if no
-         * second input).Output is capped to +/- Float.MAX_VALUE
+         * second input).Output is capped to +/- Double.MAX_VALUE
          * @param input
          * @param bias
          * @return
@@ -134,9 +134,9 @@ enum class ActivationFunction {
                 val v = input[0] / input[1]
                 if (java.lang.Double.isNaN(v) || java.lang.Double.isInfinite(v)) {
                     val pos = Math.signum(input[0]) == Math.signum(input[1])
-                    return (if (pos) Float.MAX_VALUE.toDouble() else -Float.MAX_VALUE.toDouble())
+                    return (if (pos) Double.MAX_VALUE.toDouble() else -Double.MAX_VALUE.toDouble())
                 }
-                return Math.max(-Float.MAX_VALUE.toDouble(), Math.min(Float.MAX_VALUE.toDouble(), v))
+                return Math.max(-Double.MAX_VALUE.toDouble(), Math.min(Double.MAX_VALUE.toDouble(), v))
             }
             return 0.0
         }
@@ -145,7 +145,7 @@ enum class ActivationFunction {
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
         override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
+            return Double.MAX_VALUE.toDouble()
         }
 
         /**
@@ -421,14 +421,14 @@ enum class ActivationFunction {
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
         override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
+            return Double.MAX_VALUE.toDouble()
         }
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
          */
         override fun getMinValue(): Double {
-            return (-Float.MAX_VALUE).toDouble()
+            return (-Double.MAX_VALUE).toDouble()
         }
 
         /**
@@ -675,14 +675,14 @@ enum class ActivationFunction {
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
         override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
+            return Double.MAX_VALUE.toDouble()
         }
 
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
          */
         override fun getMinValue(): Double {
-            return (-Float.MAX_VALUE).toDouble()
+            return (-Double.MAX_VALUE).toDouble()
         }
 
         /**
@@ -873,7 +873,7 @@ enum class ActivationFunction {
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
         override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
+            return Double.MAX_VALUE.toDouble()
         }
 
         /**
@@ -923,7 +923,7 @@ enum class ActivationFunction {
          * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
          */
         override fun getMaxValue(): Double {
-            return Float.MAX_VALUE.toDouble()
+            return Double.MAX_VALUE.toDouble()
         }
 
         /**

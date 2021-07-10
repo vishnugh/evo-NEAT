@@ -2,9 +2,11 @@ package com.evo.NEAT
 
 import com.evo.NEAT.com.evo.NEAT.ActivationFunction
 import com.evo.NEAT.config.NEAT_Config
-import kotlinx.coroutines.launch
+import com.evo.NEAT.config.Sim
+import examples.SineRider.Companion.HIDDEN_NODES
+import examples.SineRider.Companion.INPUTS
+import examples.SineRider.Companion.OUTPUTS
 import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.runBlocking
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair
 import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import java.io.BufferedWriter
@@ -12,8 +14,8 @@ import java.io.FileWriter
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.ConcurrentSkipListSet
 import javax.management.RuntimeErrorException
+import kotlin.math.max
 import kotlin.random.Random
 
 /**
@@ -23,6 +25,7 @@ class Genome : Comparable<Genome> {
     constructor() {
         mutationRates = MutationKeys.mutationRates
     }
+
     constructor(child: Genome) {
         this.connectionGeneList = ArrayList<ConnectionGene>()
         this.nodes = ConcurrentSkipListMap()
@@ -36,8 +39,8 @@ class Genome : Comparable<Genome> {
 
     var color = ActivationFunction.values().toList().shuffled().first()
     var fitness // Global Percentile Rank (higher the better)
-            = 0f
-    var points = 0f
+            = 0.0
+    var points = 0.0
 
     // Can remove below setter-getter after testing
     var connectionGeneList: MutableList<ConnectionGene> = ArrayList() // DNA- MAin archive of gene information
@@ -45,79 +48,78 @@ class Genome : Comparable<Genome> {
 
     // Generated while performing network operation
     var adjustedFitness // For number of child to breed in species
-            = 0f
+            = 0.0
     private var mutationRates = EnumMap(MutationKeys.mutationRates)
 
     private fun generateNetwork() {
         nodes.clear()
         //  Input layer
-        for (i in 0 until NEAT_Config.INPUTS) {
-            nodes[i] = NodeGene(0f) //Inputs
-        }
-        nodes[NEAT_Config.INPUTS] = NodeGene(1f) // Bias
+        /*Inputs*/
+        for (i in 0 until sim.INPUTS)
+            nodes[i] = NodeGene(0.0)
+        nodes[INPUTS] = NodeGene(1.0) // Bias
 
         //output layer
-        for (i in NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES until NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES + NEAT_Config.OUTPUTS) {
-            nodes[i] = NodeGene(0.0f)
-        }
+        for (i in INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS)
+            nodes[i] = NodeGene(0.0 )
 
         // hidden layer
         for (con in connectionGeneList) {
-            if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0f)
-            if (!nodes.containsKey(con.out)) nodes[con.out] = NodeGene(0f)
+            if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0.0)
+            if (!nodes.containsKey(con.out)) nodes[con.out] = NodeGene(0.0)
             nodes[con.out]!!.incomingCon.add(con)
         }
     }
 
-    fun evaluateNetwork(inputs: FloatArray): FloatArray {
-        val output = FloatArray(NEAT_Config.OUTPUTS)
+    fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
+        val output = DoubleArray(OUTPUTS)
         generateNetwork()
-        for (i in 0 until NEAT_Config.INPUTS) nodes[i]!!.value = inputs[i]
+        for (i in 0 until INPUTS) nodes[i]!!.value = inputs[i]
         for ((key, node) in nodes) {
-            var sum = 0f
-            if (key > NEAT_Config.INPUTS) {
+            var sum = 0.0
+            if (key > INPUTS) {
                 for (conn in node.incomingCon)
                     if (conn.isEnabled) sum += nodes[conn.into]!!.value * conn.weight
                 node.value = doColor(sum)
             }
         }
-        val i1 = NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES
-        for (i in 0 until NEAT_Config.OUTPUTS) output[i] = nodes[i1 + i]!!.value
+        val i1 = INPUTS + HIDDEN_NODES
+        for (i in 0 until OUTPUTS) output[i] = nodes[i1 + i]!!.value
         return output
     }
 
-    private fun doColor(x: Float): Float {
-        return color.apply(x.toDouble()).toFloat()
+    private fun doColor(x: Double): Double {
+        return color.apply(x.toDouble()).toDouble()
     }
 
     // Mutations
     fun Mutate() {
         // Mutate mutation rates
         for ((key, value) in mutationRates) {
-            if (rand.nextBoolean()) mutationRates[key] = 0.95f * value.toFloat() else mutationRates[key] =
-                1.05263f * value.toFloat()
+            if (rand.nextBoolean()) mutationRates[key] = 0.95f * value.toDouble() else mutationRates[key] =
+                1.05263f * value.toDouble()
         }
         (MutationKeys.WEIGHT_MUTATION_CHANCE.ordinal..MutationKeys.ENABLE_MUTATION_CHANCE.ordinal).forEach {
             MutationKeys.values()[it].let { mk ->
-                if (this.mutationRates[mk]!!.toFloat() > rand.nextFloat()) mk.fn(this)
+                if (this.mutationRates[mk]!!.toDouble() > rand.nextDouble()) mk.fn(this)
             }
         }
     }
 
     fun mutateWeight() {
-        for (c in connectionGeneList) if (rand.nextFloat() < NEAT_Config.WEIGHT_CHANCE)
-            if (rand.nextFloat() < NEAT_Config.PERTURB_CHANCE) c.weight =
-                c.weight + (rand.nextDouble(-1.0, (1.0 + Float.MIN_VALUE))
-                    .toFloat()) * NEAT_Config.STEPS else c.weight = rand.nextDouble(-2.0, 2.0).toFloat()
+        for (c in connectionGeneList) if (rand.nextDouble() < NEAT_Config.WEIGHT_CHANCE)
+            if (rand.nextDouble() < NEAT_Config.PERTURB_CHANCE) c.weight =
+                c.weight + (rand.nextDouble(-1.0, (1.0 + Double.MIN_VALUE))
+                    .toDouble()) * NEAT_Config.STEPS else c.weight = rand.nextDouble(-2.0, 2.0).toDouble()
     }
 
     fun mutateAddConnection(forceBais: Boolean) {
         generateNetwork()
         var i = 0
         var j = 0
-        val random2 = rand.nextInt(NEAT_Config.INPUTS + 1, nodes.size)
+        val random2 = rand.nextInt(INPUTS + 1, nodes.size)
         var random1 = rand.nextInt(nodes.size)
-        if (forceBais) random1 = NEAT_Config.INPUTS
+        if (forceBais) random1 = INPUTS
         var node1 = -1
         var node2 = -1
 
@@ -145,7 +147,7 @@ class Genome : Comparable<Genome> {
         connectionGeneList.add(ConnectionGene(node1,
             node2,
             InnovationCounter.newInnovation(),
-            4 * rand.nextFloat() - 2,
+            4 * rand.nextDouble() - 2,
             true)) // Add innovation and weight
     }
 
@@ -157,9 +159,9 @@ class Genome : Comparable<Genome> {
             while (!randomCon.isEnabled) {
                 randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
                 timeoutCount++
-                if (timeoutCount > NEAT_Config.HIDDEN_NODES) return
+                if (timeoutCount > HIDDEN_NODES) return
             }
-            val nextNode = nodes.size - NEAT_Config.OUTPUTS
+            val nextNode = nodes.size - OUTPUTS
             randomCon.isEnabled = false
             connectionGeneList.add(ConnectionGene(randomCon.into,
                 nextNode,
@@ -167,7 +169,7 @@ class Genome : Comparable<Genome> {
                  * identifying string
                  */
                 InnovationCounter.newInnovation(),
-                1f,
+                1.0,
                 true)) // Add innovation and weight
             connectionGeneList.add(ConnectionGene(nextNode,
                 randomCon.out,
@@ -225,7 +227,7 @@ class Genome : Comparable<Genome> {
 
 
     companion object {
-        private val rand = Random
+        val rand = Random
 
         @JvmStatic
         fun crossOver(p1: Genome, p2: Genome): Genome {
@@ -251,7 +253,7 @@ class Genome : Comparable<Genome> {
                 if (geneMap1.containsKey(key) && geneMap2.containsKey(key)) {
                     trait = ConnectionGene((if (rand.nextBoolean()) geneMap1 else geneMap2)[key]!!)
                     if (geneMap1[key]!!.isEnabled != geneMap2[key]!!.isEnabled) trait.isEnabled =
-                        rand.nextFloat() >= 0.75f
+                        rand.nextDouble() >= 0.75f
                 } else if (parent1.fitness != parent2.fitness) trait = geneMap1[key]
                 else {               // disjoint or excess and equal fitness
                     trait = if (geneMap1.containsKey(key)) geneMap1[key] else geneMap2[key]
@@ -269,43 +271,19 @@ class Genome : Comparable<Genome> {
             val geneMap2 = g2.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
                 .toMap(ConcurrentSkipListMap())
 
-            val lowMaxInnovation: Int = when {
-                geneMap1.isEmpty() || geneMap2.isEmpty() -> 0
-                else -> Math.min(geneMap1.lastKey(), geneMap2.lastKey())
-            }
-
             val keys1 = geneMap1.keys
             val keys2 = geneMap2.keys
-
-            ConcurrentSkipListSet(keys1 + keys2).let { remainder ->
-                var matching = 0
-                var disjoint = 0
-                var excess = 0
-                var weight = 0f
-                runBlocking(context) {
-                    launch(context) {
-                        keys1.intersect(keys2).forEach {
-                            remainder -= it
-                            matching++
-                            weight += Math.abs(geneMap1[it]!!.weight - geneMap2[it]!!.weight)
-                        }
-                    }
-                    launch(context) {
-                        remainder.forEach {
-                            if (it < lowMaxInnovation) disjoint++
-                            else excess++
-                        }
-                    }
-                }
-                //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
-                return ((matching + disjoint + excess).takeIf { it < 0 }?.let {
-                    (NEAT_Config.EXCESS_COEFFICENT * excess + NEAT_Config.DISJOINT_COEFFICENT * disjoint) / it + NEAT_Config.WEIGHT_COEFFICENT * weight / matching
-                } ?: 0f) < NEAT_Config.COMPATIBILITY_THRESHOLD
-
-            }
+            val union = (keys1 + keys2)//.size
+            val intersect = keys1.intersect(keys2)
+            val allKeys = max(1, union.size)
+            val sharedKeys = max(intersect.size, 1)
+            return allKeys / 6 < sharedKeys
         }
 
         val context = newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(), "population")
+
+        lateinit var sim: Sim
+
     }
 
     override fun toString(): String {

@@ -9,7 +9,7 @@ data class ConnectionGene(
     var into: Int = 0,
     var out: Int = 0,
     var innovation: Int = 0,
-    var weight: Float = 0f,
+    var weight: Double = 0.0,
     var isEnabled: Boolean = false,
 ) {
     // Copy

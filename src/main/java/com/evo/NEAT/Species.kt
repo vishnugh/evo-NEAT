@@ -3,21 +3,21 @@ package com.evo.NEAT
 import com.evo.NEAT.Genome.Companion.crossOver
 import com.evo.NEAT.config.NEAT_Config
 import java.util.*
+import kotlin.random.Random
 
 /**
  * Created by vishnu on 7/1/17.
  */
-class Species : Comparable<Any?> {
+class Species : Comparable<Species> {
     var genomes = ArrayList<Genome>()
-        private set
-    var topFitness = 0f
+    var topFitness = 0.0
         get() {
             field = topGenome.fitness
             field = topGenome.fitness
             return field
         }
     var staleness = 0
-    var rand = Random()
+    var rand = Random
 
     constructor() : super()
     constructor(top: Genome) : super() {
@@ -25,14 +25,12 @@ class Species : Comparable<Any?> {
     }
 
     fun calculateGenomeAdjustedFitness() {
-        for (g in genomes) {
-            g.adjustedFitness = g.fitness / genomes.size
-        }
+        for (g in genomes) g.adjustedFitness = g.fitness / genomes.size
     }
 
-    val totalAdjustedFitness: Float
+    val totalAdjustedFitness: Double
         get() {
-            var totalAdjustedFitness = 0f
+            var totalAdjustedFitness = 0.0
             for (g in genomes) {
                 totalAdjustedFitness += g.adjustedFitness
             }
@@ -49,9 +47,7 @@ class Species : Comparable<Any?> {
         var surviveCount = 1
         if (!allButOne) surviveCount = Math.ceil((genomes.size / 2f).toDouble()).toInt()
         val survivedGenomes = ArrayList<Genome>()
-        for (i in 0 until surviveCount) {
-            survivedGenomes.add(Genome(genomes[i]))
-        }
+        for (i in 0 until surviveCount) survivedGenomes.add(Genome(genomes[i]))
         genomes = survivedGenomes
     }
 
@@ -73,7 +69,7 @@ class Species : Comparable<Any?> {
 
     fun breedChild(): Genome {
         var child: Genome
-        child = if (rand.nextFloat() < NEAT_Config.CROSSOVER_CHANCE) {
+        child = if (rand.nextDouble() < NEAT_Config.CROSSOVER_CHANCE) {
             val g1 = genomes[rand.nextInt(genomes.size)]
             val g2 = genomes[rand.nextInt(genomes.size)]
             crossOver(g1, g2)
@@ -86,10 +82,9 @@ class Species : Comparable<Any?> {
         return child
     }
 
-    override fun compareTo(o: Any?): Int {
-        val s = o as Species?
+    override fun compareTo(o: Species ): Int {
         val top = topFitness
-        val otherTop = s!!.topFitness
+        val otherTop = (o ) .topFitness
         return if (top == otherTop) 0 else if (top > otherTop) 1 else -1
     }
 }

@@ -1,6 +1,8 @@
 package com.evo.NEAT
 
 import com.evo.NEAT.Genome.Companion.isSameSpecies
+import com.evo.NEAT.Genome.Companion.rand
+import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
 import java.util.*
 
@@ -9,12 +11,12 @@ import java.util.*
  */
 class Pool {
     var species = ArrayList<Species>()
-        private set
     private var generations = 0
-    private val topFitness = 0f
+    private val topFitness = 0.0
     private var poolStaleness = 0
     fun initializePool() {
-        for (i in 0 until NEAT_Config.POPULATION) {
+        val nextInt = rand.nextInt(1,  Genome.sim.POPULATION)
+        for (i in 0 until nextInt) {
             addToSpecies(Genome())
         }
     }
@@ -22,7 +24,7 @@ class Pool {
     fun addToSpecies(g: Genome) {
         for (s in species) {
             if (s.genomes.size != 0) {
-                val g0 = s.genomes[0]
+                val g0 = s.genomes.first()
                 //		System.out.println(s.genomes.size());
                 if (isSameSpecies(g, g0)) {
                     s.genomes.add(g)
@@ -66,7 +68,7 @@ class Pool {
         //       System.out.println("TopFitness : "+ allGenome.get(allGenome.size()-1).getFitness());
         for (i in allGenome.indices) {
             allGenome[i].points = allGenome[i].fitness //TODO use adjustedFitness and remove points
-            allGenome[i].fitness = i.toFloat()
+            allGenome[i].fitness = i.toDouble()
         }
     }
 
@@ -83,8 +85,8 @@ class Pool {
         }
 
     // all species must have the totalAdjustedFitness calculated
-    fun calculateGlobalAdjustedFitness(): Float {
-        var total = 0f
+    fun calculateGlobalAdjustedFitness(): Double {
+        var total = 0.0
         for (s in species) {
             total += s.totalAdjustedFitness
         }
@@ -114,7 +116,7 @@ class Pool {
             }
         }
         Collections.sort(survived, Collections.reverseOrder())
-        if (poolStaleness > NEAT_Config.STALE_POOL) {
+        if (poolStaleness > Genome.sim.STALE_POOL) {
             for (i in survived.size downTo 2) survived.removeAt(i)
         }
         species = survived
@@ -131,20 +133,17 @@ class Pool {
         removeStaleSpecies()
         val globalAdjustedFitness = calculateGlobalAdjustedFitness()
         val children = ArrayList<Genome>()
-        var carryOver = 0f
+        var carryOver = 0.0
         for (s in species) {
-            val fchild =
-                NEAT_Config.POPULATION * (s.totalAdjustedFitness / globalAdjustedFitness) //- 1;       // reconsider
+            val fchild = sim.POPULATION * (s.totalAdjustedFitness / globalAdjustedFitness)
             var nchild = fchild.toInt()
             carryOver += fchild - nchild
             if (carryOver > 1) {
                 nchild++
-                carryOver -= 1f
+                carryOver -= 1.0
             }
             if (1 <= nchild) {
                 survived.add(Species(s.topGenome))
-                //s.removeWeakGenome(nchild);
-                //children.add(s.getTopGenome());
                 for (i in 1 until nchild) {
                     val child = s.breedChild()
                     children.add(child)
@@ -158,8 +157,8 @@ class Pool {
         return children
     }
 
-    fun getTopFitness(): Float {
-        var topFitness = 0f
+    fun getTopFitness(): Double {
+        var topFitness = 0.0
         var topGenome: Genome? = null
         for (s in species) {
             topGenome = s.topGenome
