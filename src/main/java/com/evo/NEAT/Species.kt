@@ -8,9 +8,10 @@ import kotlin.random.Random
 
 /**
  * Created by vishnu on 7/1/17.
- */@Serializable
+ */
+@Serializable
 class Species : Comparable<Species> {
-    var genomes = ArrayList<Genome>()
+    var genomes: MutableList<Genome> = mutableListOf()
     var topFitness = 0.0
         get() {
             field = topGenome.fitness

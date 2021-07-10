@@ -23,28 +23,28 @@ import kotlin.random.Random
  */
 @Serializable
 class Genome : Comparable<Genome> {
-    constructor() {
-        mutationRates = MutationKeys.mutationRates
-    }
+    constructor() { mutationRates = MutationKeys.mutationRates }
 
     constructor(child: Genome) {
-        this.connectionGeneList = ArrayList<ConnectionGene>()
+        this.connections = ArrayList<ConnectionGene>()
         this.nodes = sortedMapOf()
         this.mutationRates = MutationKeys.mutationRates
-        for (c in child.connectionGeneList) connectionGeneList.add(ConnectionGene(c))
+        for (c in child.connections) connections.add(ConnectionGene(c))
         fitness = child.fitness
         adjustedFitness = child.adjustedFitness
         mutationRates = EnumMap(child.mutationRates)
 //        color = child.color
     }
 
-    var color = ActivationFunction.values().toList().shuffled().first()
-    var fitness // Global Percentile Rank (higher the better)
-            = 0.0
+    var color: ActivationFunction = ActivationFunction.values().random()
+
+    /** Global Percentile Rank (higher the better)*/
+    public var fitness = 0.0
+
     var points = 0.0
 
     // Can remove below setter-getter after testing
-    var connectionGeneList: MutableList<ConnectionGene> = ArrayList() // DNA- MAin archive of gene information
+    var connections: MutableList<ConnectionGene> = ArrayList() // DNA- MAin archive of gene information
 
     @Serializable
     var nodes: MutableMap<Int, NodeGene> = sortedMapOf()
@@ -57,22 +57,20 @@ class Genome : Comparable<Genome> {
     private var mutationRates: MutableMap<MutationKeys, Double> = EnumMap(MutationKeys.mutationRates)
 
     fun generateNetwork() {
-        nodes.clear()
-        //  Input layer
-        /*Inputs*/
-        for (i in 0 until Genome.sim.INPUTS)
-            nodes[i] = NodeGene(0.0)
-        nodes[INPUTS] = NodeGene(1.0) // Bias
-
-        //output layer
-        for (i in INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS)
-            nodes[i] = NodeGene(0.0)
-
+        /* Bias output layer */
+        nodes = ((List(sim.INPUTS) { i -> i to NodeGene(0.0) } +
+                (INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS).map {
+                    it to NodeGene(0.0)
+                }) +
+                (INPUTS to NodeGene(1.0) /* Bias output layer */)).toMap(linkedMapOf())
         // hidden layer
-        for (con in connectionGeneList) {
+
+        connections.forEach { con ->
             if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0.0)
             if (!nodes.containsKey(con.out)) nodes[con.out] = NodeGene(0.0, arrayListOf(con))
         }
+
+
     }
 
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
@@ -109,8 +107,9 @@ class Genome : Comparable<Genome> {
             }
         }
     }
+
         fun mutateWeight() {
-            for (c in connectionGeneList) if (rand.nextDouble() < NEAT_Config.WEIGHT_CHANCE)
+            for (c in connections) if (rand.nextDouble() < NEAT_Config.WEIGHT_CHANCE)
                 if (rand.nextDouble() < NEAT_Config.PERTURB_CHANCE) c.weight =
                     c.weight + (rand.nextDouble(-1.0, (1.0 + Double.MIN_VALUE))) * NEAT_Config.STEPS else c.weight =
                     rand.nextDouble(-2.0, 2.0).toDouble()
@@ -147,53 +146,65 @@ class Genome : Comparable<Genome> {
                 if (con.into == node1) return
             }
             if (node1 < 0 || node2 < 0) throw RuntimeErrorException(null) // TODO Pool.newInnovation(node1, node2)
-            connectionGeneList.add(ConnectionGene(node1,
+        connections.add(
+            ConnectionGene(
+                node1,
                 node2,
                 InnovationCounter.newInnovation(),
                 4 * rand.nextDouble() - 2,
-                true)) // Add innovation and weight
+                true
+            )
+        ) // Add innovation and weight
         }
 
         fun mutateAddNode() {
             generateNetwork()
-            if (connectionGeneList.size > 0) {
+            if (connections.size > 0) {
                 var timeoutCount = 0
-                var randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
+                var randomCon = connections[rand.nextInt(connections.size)]
                 while (!randomCon.isEnabled) {
-                    randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
+                    randomCon = connections[rand.nextInt(connections.size)]
                     timeoutCount++
                     if (timeoutCount > HIDDEN_NODES) return
                 }
                 val nextNode = nodes.size - OUTPUTS
                 randomCon.isEnabled = false
-                connectionGeneList.add(ConnectionGene(randomCon.into,
+            connections.add(
+                ConnectionGene(
+                    randomCon.into,
                     nextNode,
                     /**
                      * identifying string
                      */
                     InnovationCounter.newInnovation(),
                     1.0,
-                    true)) // Add innovation and weight
-                connectionGeneList.add(ConnectionGene(nextNode,
+                    true
+                )
+            ) // Add innovation and weight
+            connections.add(
+                ConnectionGene(
+                    nextNode,
                     randomCon.out,
                     InnovationCounter.newInnovation(),
                     randomCon.weight,
-                    true))
+                    true
+                )
+            )
             }
         }
 
         fun disableMutate() {
             //generateNetwork();                // remove laters
-            if (connectionGeneList.size > 0) {
-                val randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
+            if (connections.size > 0) {
+                val randomCon = connections[rand.nextInt(connections.size)]
                 randomCon.isEnabled = false
             }
         }
 
         fun enableMutate() {
 //        generateNetwork();                // remove laters
-            if (connectionGeneList.size > 0) {
-                val randomCon = connectionGeneList[rand.nextInt(connectionGeneList.size)]
+            if (connections.size > 0) {
+                val randomCon = connections[rand.nextInt(connections.size)]
                 randomCon.isEnabled = true
             }
         }
@@ -205,11 +216,13 @@ class Genome : Comparable<Genome> {
             var bw: BufferedWriter? = null
             var fw: FileWriter? = null
             val builder = StringBuilder()
-            for (conn in connectionGeneList) {
-                builder.append("""
+            for (conn in connections) {
+            builder.append(
+                """
     $conn
     
-    """.trimIndent())
+    """.trimIndent()
+            )
             }
             try {
                 fw = FileWriter("Genome.txt")
@@ -245,8 +258,8 @@ class Genome : Comparable<Genome> {
                 val child = Genome()
                 val geneMap1 = TreeMap<Int, ConnectionGene>()
                 val geneMap2 = TreeMap<Int, ConnectionGene>()
-                for (con in parent1.connectionGeneList) geneMap1[con.innovation] = con
-                for (con in parent2.connectionGeneList) geneMap2[con.innovation] = con
+                for (con in parent1.connections) geneMap1[con.innovation] = con
+                for (con in parent2.connections) geneMap2[con.innovation] = con
                 val innovationP1: Set<Int> = geneMap1.keys
                 val innovationP2: Set<Int> = geneMap2.keys
                 val allInnovations: MutableSet<Int> = LinkedHashSet(innovationP1)
@@ -262,7 +275,7 @@ class Genome : Comparable<Genome> {
                         trait = if (geneMap1.containsKey(key)) geneMap1[key] else geneMap2[key]
                         if (rand.nextBoolean()) continue
                     }
-                    trait?.let { child.connectionGeneList.add(it) }
+                    trait?.let { child.connections.add(it) }
                 }
                 return child
             }
@@ -270,10 +283,10 @@ class Genome : Comparable<Genome> {
             @JvmStatic
             fun isSameSpecies(g1: Genome, g2: Genome): Boolean {
                 val geneMap1 =
-                    g1.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
+                    g1.connections.map { connectionGene -> connectionGene.innovation to connectionGene }
                         .toMap()
                 val geneMap2 =
-                    g2.connectionGeneList.map { connectionGene -> connectionGene.innovation to connectionGene }
+                    g2.connections.map { connectionGene -> connectionGene.innovation to connectionGene }
                         .toMap()
 
                 val keys1 = geneMap1.keys
@@ -292,7 +305,7 @@ class Genome : Comparable<Genome> {
         }
 
         override fun toString(): String {
-            val unqLinks = connectionGeneList.filter { it.isEnabled }
+            val unqLinks = connections.filter { it.isEnabled }
             val inList: List<Int> = unqLinks.map { it.into }.distinct()
             val outList: List<Int> = unqLinks.map { it.out }.distinct()
             val allinks: List<Int> = inList + outList

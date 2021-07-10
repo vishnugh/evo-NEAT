@@ -9,90 +9,45 @@ import java.util.*
 
 /**
  * Created by vishnu on 7/1/17.
- */@Serializable
+ */
+@Serializable
 class Pool {
     var species = ArrayList<Species>()
     private var generations = 0
     private val topFitness = 0.0
     private var poolStaleness = 0
     fun initializePool() {
-        val nextInt = rand.nextInt(1,  Genome.sim.POPULATION)
+        val nextInt = rand.nextInt(1, Genome.sim.POPULATION)
         for (i in 0 until nextInt) {
             addToSpecies(Genome())
         }
     }
 
-    fun addToSpecies(g: Genome) {
-        for (s in species) {
-            if (s.genomes.size != 0) {
-                val g0 = s.genomes.first()
-                //		System.out.println(s.genomes.size());
-                if (isSameSpecies(g, g0)) {
-                    s.genomes.add(g)
-                    return
-                }
-            }
-        }
-        val childSpecies = Species()
-        childSpecies.genomes.add(g)
-        species.add(childSpecies)
-    }
+    fun addToSpecies(g: Genome) =
+        species.filter { it.genomes.isNotEmpty() && isSameSpecies(g, it.genomes.first()) }
+            .firstOrNull { it.genomes.add(g) } ?: let { species.add(Species().also { it.genomes.add(g) }) }
+
 
     fun evaluateFitness(environment: Environment) {
-        val allGenome = ArrayList<Genome>()
-        for (s in species) {
-            for (g in s.genomes) {
-                allGenome.add(g)
-            }
-        }
-
-        /*       for(int i =0; i<allGenome.size(); i++){
-            for(int j = 0; j<allGenome.size(); j++){
-                if(i!=j){
-                    Genome player1 = allGenome.get(i);
-                    Genome player2 = allGenome.get(j);
-                    environment.match(player1,player2);
-                }
-            }
-        }*/environment.evaluateFitness(allGenome)
+        environment.evaluateFitness(species.map(Species::genomes).flatten())
         rankGlobally()
     }
 
     // experimental
     private fun rankGlobally() {                // set fitness to rank
-        val allGenome = ArrayList<Genome>()
-        for (s in species)
-            for (g in s.genomes)
-                allGenome.add(g)
-        Collections.sort(allGenome)
-        //      allGenome.get(allGenome.size()-1).writeTofile();
-        //       System.out.println("TopFitness : "+ allGenome.get(allGenome.size()-1).getFitness());
-        for (i in allGenome.indices) {
-            allGenome[i].points = allGenome[i].fitness //TODO use adjustedFitness and remove points
-            allGenome[i].fitness = i.toDouble()
-        }
+        species.map(Species::genomes).flatten().sorted()
+            .forEachIndexed { index: Int, value: Genome ->
+                value.points = value.fitness
+                value.fitness = index.toDouble()
+            }
+
+
     }
 
-    val topGenome: Genome
-        get() {
-            val allGenome = ArrayList<Genome>()
-            for (s in species) {
-                for (g in s.genomes) {
-                    allGenome.add(g)
-                }
-            }
-            Collections.sort(allGenome, Collections.reverseOrder())
-            return allGenome[0]
-        }
+    val topGenome get() = species.map(Species::genomes).flatten().sortedDescending().first()
 
     // all species must have the totalAdjustedFitness calculated
-    fun calculateGlobalAdjustedFitness(): Double {
-        var total = 0.0
-        for (s in species) {
-            total += s.totalAdjustedFitness
-        }
-        return total
-    }
+    fun calculateGlobalAdjustedFitness() = species.map(Species::totalAdjustedFitness).sum()
 
     fun removeWeakGenomesFromSpecies(allButOne: Boolean) {
         for (s in species) s.removeWeakGenomes(allButOne)
@@ -101,9 +56,7 @@ class Pool {
 
     fun removeStaleSpecies() {
         val survived = ArrayList<Species>()
-        if (topFitness < getTopFitness()) {
-            poolStaleness = 0
-        }
+        if (topFitness < getTopFitness()) poolStaleness = 0
         for (s in species) {
             val top = s.topGenome
             if (top.fitness > s.topFitness) {
@@ -112,19 +65,16 @@ class Pool {
             } else {
                 s.staleness = s.staleness + 1 // increment staleness
             }
-            if (s.staleness < NEAT_Config.STALE_SPECIES || s.topFitness >= getTopFitness()) {
-                survived.add(s)
-            }
+            if (s.staleness < NEAT_Config.STALE_SPECIES || s.topFitness >= getTopFitness()) survived.add(s)
         }
         Collections.sort(survived, Collections.reverseOrder())
-        if (poolStaleness > Genome.sim.STALE_POOL) {
-            for (i in survived.size downTo 2) survived.removeAt(i)
-        }
+        if (poolStaleness > sim.STALE_POOL) for (i in survived.size downTo 2) survived.removeAt(i)
         species = survived
         poolStaleness++
     }
 
-    fun calculateGenomeAdjustedFitness() { for (s in species) s.calculateGenomeAdjustedFitness()
+    fun calculateGenomeAdjustedFitness() {
+        for (s in species) s.calculateGenomeAdjustedFitness()
     }
 
     fun breedNewGeneration(): ArrayList<Genome> {
