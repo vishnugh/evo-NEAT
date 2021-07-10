@@ -4,11 +4,12 @@ import com.evo.NEAT.Genome.Companion.isSameSpecies
 import com.evo.NEAT.Genome.Companion.rand
 import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
+import kotlinx.serialization.Serializable
 import java.util.*
 
 /**
  * Created by vishnu on 7/1/17.
- */
+ */@Serializable
 class Pool {
     var species = ArrayList<Species>()
     private var generations = 0

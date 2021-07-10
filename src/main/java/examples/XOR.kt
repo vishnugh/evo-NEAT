@@ -8,6 +8,8 @@ import com.evo.NEAT.config.Sim
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.lang.Math.abs
 import kotlin.random.Random
 
@@ -18,15 +20,12 @@ class XOR : Environment {
     @OptIn(ObsoleteCoroutinesApi::class)
     override fun evaluateFitness(population: Iterable<Genome>) {
         runBlocking(context) {
-
             for (gene in population) launch(context) {
-
                 gene.fitness = DoubleArray(17) {
                     val (i, j) = (Random.nextBoolean()) to (Random.nextBoolean())
                     val inputs = doubleArrayOf(if (i) 1.0 else 0.0, if (j) 1.0 else 0.0)
                     val output = gene.evaluateNetwork(inputs)
                     val expected = if (i xor j) 1.0 else 0.0
-
                     (1.0 - abs(expected - output[0]))
                 }.average().toDouble()
             }
@@ -40,7 +39,7 @@ class XOR : Environment {
 
         @JvmStatic
         fun main(arg0: Array<String>) {
-            Genome.sim = Sim(2, 20, 1, 1000000, 1444)
+            Genome.sim = Sim(2, 20, 1, 1000000, 11 )
             val pool = Pool()
             pool.initializePool()
             var topGenome: Genome
@@ -68,9 +67,12 @@ class XOR : Environment {
                         println()
                     }
 
+
+                    special!!.genomes
                     pool.species.clear()
                     pool.species += special!!
 
+                    println(   Json { isLenient = true; allowSpecialFloatingPointValues =true;prettyPrint =false }     .encodeToString(pool ))
 
                 }
                 //                System.out.println("Population : " + pool.currentPopulation)

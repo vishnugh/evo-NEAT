@@ -38,6 +38,9 @@ class SineRider : Environment {
         const val INPUTS = 1
         const val STALE_POOL = 20
         const val OUTPUTS = 3
+
+        /** apparently this is a numeric key offset that seperates the genome state
+         *  from input and output nodes in a stable offset key */
         const val HIDDEN_NODES = 1000000
 
         val sineRider = SineRider()

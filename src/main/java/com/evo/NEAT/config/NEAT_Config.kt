@@ -5,18 +5,18 @@ package com.evo.NEAT.config
  */
 object NEAT_Config {
     const val COMPATIBILITY_THRESHOLD = 1.0
-    const val EXCESS_COEFFICENT = 2f
-    const val DISJOINT_COEFFICENT = 2f
-    const val WEIGHT_COEFFICENT = 0.4f
-    const val STALE_SPECIES = 15f
+    const val EXCESS_COEFFICENT = 2
+    const val DISJOINT_COEFFICENT = 2
+    const val WEIGHT_COEFFICENT = 0.4
+    const val STALE_SPECIES = 15
     const val STEPS = 0.1
-    const val PERTURB_CHANCE = 0.9f
-    const val WEIGHT_CHANCE = 0.3f
-    const val WEIGHT_MUTATION_CHANCE = 0.9f
+    const val PERTURB_CHANCE = 0.9
+    const val WEIGHT_CHANCE = 0.3
+    const val WEIGHT_MUTATION_CHANCE = 0.9
     const val NODE_MUTATION_CHANCE = 0.1
     const val CONNECTION_MUTATION_CHANCE = 0.1
-    const val BIAS_CONNECTION_MUTATION_CHANCE = 0.15f
+    const val BIAS_CONNECTION_MUTATION_CHANCE = 0.15
     const val DISABLE_MUTATION_CHANCE = 0.1
-    const val ENABLE_MUTATION_CHANCE = 0.2f
-    const val CROSSOVER_CHANCE = 0.75f
+    const val ENABLE_MUTATION_CHANCE = 0.2
+    const val CROSSOVER_CHANCE = 0.75
 }

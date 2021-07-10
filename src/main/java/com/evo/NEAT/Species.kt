@@ -2,12 +2,13 @@ package com.evo.NEAT
 
 import com.evo.NEAT.Genome.Companion.crossOver
 import com.evo.NEAT.config.NEAT_Config
+import kotlinx.serialization.Serializable
 import java.util.*
 import kotlin.random.Random
 
 /**
  * Created by vishnu on 7/1/17.
- */
+ */@Serializable
 class Species : Comparable<Species> {
     var genomes = ArrayList<Genome>()
     var topFitness = 0.0
@@ -17,7 +18,6 @@ class Species : Comparable<Species> {
             return field
         }
     var staleness = 0
-    var rand = Random
 
     constructor() : super()
     constructor(top: Genome) : super() {
@@ -69,12 +69,12 @@ class Species : Comparable<Species> {
 
     fun breedChild(): Genome {
         var child: Genome
-        child = if (rand.nextDouble() < NEAT_Config.CROSSOVER_CHANCE) {
-            val g1 = genomes[rand.nextInt(genomes.size)]
-            val g2 = genomes[rand.nextInt(genomes.size)]
+        child = if (Random.nextDouble() < NEAT_Config.CROSSOVER_CHANCE) {
+            val g1 = genomes[Random.nextInt(genomes.size)]
+            val g2 = genomes[Random.nextInt(genomes.size)]
             crossOver(g1, g2)
         } else {
-            val g1 = genomes[rand.nextInt(genomes.size)]
+            val g1 = genomes[Random.nextInt(genomes.size)]
             g1
         }
         child = Genome(child)
