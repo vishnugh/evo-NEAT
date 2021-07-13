@@ -4,13 +4,14 @@ import com.evo.NEAT.Genome.Companion.isSameSpecies
 import com.evo.NEAT.Genome.Companion.rand
 import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
+import javolution.util.FastTable
 import kotlinx.serialization.Serializable
 import java.util.*
 
 /**
  * Created by vishnu on 7/1/17.
  */
-@Serializable
+/*@Serializable*/
 class Pool {
     var species: MutableList<Species> = arrayListOf()
     private var generations = 0
@@ -55,7 +56,7 @@ class Pool {
 
 
     fun removeStaleSpecies() {
-        val survived = ArrayList<Species>()
+        val survived = FastTable<Species>()
         if (topFitness < getTopFitness()) poolStaleness = 0
         for (s in species) {
             val top = s.topGenome
@@ -77,13 +78,13 @@ class Pool {
         for (s in species) s.calculateGenomeAdjustedFitness()
     }
 
-    fun breedNewGeneration(): ArrayList<Genome> {
+    fun breedNewGeneration(): FastTable<Genome> {
         calculateGenomeAdjustedFitness()
-        val survived = ArrayList<Species>()
+        val survived = FastTable<Species>()
         removeWeakGenomesFromSpecies(false)
         removeStaleSpecies()
         val globalAdjustedFitness = calculateGlobalAdjustedFitness()
-        val children = ArrayList<Genome>()
+        val children = FastTable<Genome>()
         var carryOver = 0.0
         for (s in species) {
             val fchild = sim.POPULATION * (s.totalAdjustedFitness / globalAdjustedFitness)

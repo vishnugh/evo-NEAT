@@ -3,7 +3,7 @@ package com.evo.NEAT
 import com.evo.NEAT.config.NEAT_Config
 import kotlinx.serialization.Serializable
 import java.util.*
-@Serializable
+/*@Serializable*/
 enum class MutationKeys(val cfg: Double, val fn: ((Genome) -> Unit) = {/* no-op */ }) {
     STEPS(NEAT_Config.STEPS),
     PERTURB_CHANCE(NEAT_Config.PERTURB_CHANCE),

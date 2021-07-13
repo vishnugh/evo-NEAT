@@ -2,6 +2,7 @@ package com.evo.NEAT
 
 import com.evo.NEAT.Genome.Companion.crossOver
 import com.evo.NEAT.config.NEAT_Config
+import javolution.util.FastTable
 import kotlinx.serialization.Serializable
 import java.util.*
 import kotlin.random.Random
@@ -9,7 +10,7 @@ import kotlin.random.Random
 /**
  * Created by vishnu on 7/1/17.
  */
-@Serializable
+/*@Serializable*/
 class Species : Comparable<Species> {
     var genomes: MutableList<Genome> = mutableListOf()
     var topFitness = 0.0
@@ -47,7 +48,7 @@ class Species : Comparable<Species> {
         sortGenomes()
         var surviveCount = 1
         if (!allButOne) surviveCount = Math.ceil((genomes.size / 2f).toDouble()).toInt()
-        val survivedGenomes = ArrayList<Genome>()
+        val survivedGenomes = FastTable<Genome>()
         for (i in 0 until surviveCount) survivedGenomes.add(Genome(genomes[i]))
         genomes = survivedGenomes
     }
@@ -55,7 +56,7 @@ class Species : Comparable<Species> {
     @Deprecated("")
     fun removeWeakGenome(childrenToRemove: Int) {
         sortGenomes()
-        val survived = ArrayList<Genome>()
+        val survived = FastTable<Genome>()
         for (i in 0 until genomes.size - childrenToRemove) {
             survived.add(genomes[i])
         }

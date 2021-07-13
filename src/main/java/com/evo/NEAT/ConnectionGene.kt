@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * ConnectionGene Represents the connection(Axon) of the neuron
  * ConnectionGenes can completely represent the neuron as Nodes are generated while performing operation
  * Created by vishnughosh on 28/02/17.
- */@Serializable
+ *//*@Serializable*/
 data class ConnectionGene(
     var into: Int = 0,
     var out: Int = 0,

@@ -5,10 +5,10 @@ import com.evo.NEAT.config.Sim
 import examples.SineRider.Companion.HIDDEN_NODES
 import examples.SineRider.Companion.INPUTS
 import examples.SineRider.Companion.OUTPUTS
+import javolution.util.FastTable
 import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.serialization.Serializable
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair
-import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
+//import org.eclipse.collections.api.tuple.primitive.IntObjectPair
+//import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
@@ -21,14 +21,14 @@ import kotlin.random.Random
 /**
  * Created by vishnughosh on 28/02/17.
  */
-@Serializable
+/*@Serializable*/
 class Genome : Comparable<Genome> {
     constructor() {
         mutationRates = MutationKeys.mutationRates
     }
 
     constructor(child: Genome) {
-        this.connections = ArrayList<ConnectionGene>()
+        this.connections = FastTable<ConnectionGene>()
         this.nodes = sortedMapOf()
         this.mutationRates = MutationKeys.mutationRates
         for (c in child.connections) connections.add(ConnectionGene(c))
@@ -45,15 +45,15 @@ class Genome : Comparable<Genome> {
     var points = 0.0
 
     // Can remove below setter-getter after testing
-    var connections: MutableList<ConnectionGene> = ArrayList() // DNA- MAin archive of gene information
+    var connections: MutableList<ConnectionGene> = FastTable() // DNA- MAin archive of gene information
 
-    @Serializable
+    /*@Serializable*/
     var nodes: MutableMap<Int, NodeGene> = sortedMapOf()
 
     // Generated while performing network operation
     var adjustedFitness = 0.0// For number of child to breed in species
 
-    @Serializable
+    /*@Serializable*/
     private var mutationRates: MutableMap<MutationKeys, Double> = EnumMap(MutationKeys.mutationRates)
 
     fun generateNetwork() {
@@ -67,7 +67,8 @@ class Genome : Comparable<Genome> {
 
         connections.forEach { con ->
             if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0.0)
-            if (!nodes.containsKey(con.out)) nodes[con.out] = NodeGene(0.0, arrayListOf(con))
+            if (!nodes.containsKey(con.out)) nodes[con.out] =
+                NodeGene(0.0, FastTable<ConnectionGene>().also { it += con })
         }
 
 
@@ -78,7 +79,9 @@ class Genome : Comparable<Genome> {
         generateNetwork()
         for (i in 0 until INPUTS) nodes[i]!!.impulse = inputs[i]
         nodes.filter { it.key > INPUTS }.forEach { (key, node) ->
-            node.incomingCon.filter { it.isEnabled }.map { (into, out, innovation, weight, isEnabled): ConnectionGene ->
+            node.incomingCon.filter {
+                it.isEnabled
+            }.map { (into, out, innovation, weight, isEnabled): ConnectionGene ->
                 nodes[into]!!.impulse * weight
             }.sum().let { sum -> node.impulse = node.activationFunction(sum) }
 
@@ -328,6 +331,6 @@ class Genome : Comparable<Genome> {
     }
 }
 
-operator fun <V> IntObjectHashMap<V>.set(i: Int, value: V) = this.put(i, value)
-operator fun <T> IntObjectPair<T>.component1() = one
-operator fun <T> IntObjectPair<T>.component2() = two
+//operator fun <V> IntObjectHashMap<V>.set(i: Int, value: V) = this.put(i, value)
+//operator fun <T> IntObjectPair<T>.component1() = one
+//operator fun <T> IntObjectPair<T>.component2() = two

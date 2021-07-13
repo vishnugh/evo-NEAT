@@ -2,7 +2,7 @@ package com.evo.NEAT.config
 
 import kotlinx.serialization.Serializable
 
-@Serializable
+/*@Serializable*/
 data class Sim(
     val INPUTS: Int,/* = 2*/
     val STALE_POOL: Int, /*= 20*/
