@@ -12,7 +12,7 @@ import java.util.*
  */
 @Serializable
 class Pool {
-    var species = ArrayList<Species>()
+    var species: MutableList<Species> = arrayListOf()
     private var generations = 0
     private val topFitness = 0.0
     private var poolStaleness = 0

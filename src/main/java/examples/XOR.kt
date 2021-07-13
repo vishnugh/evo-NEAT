@@ -39,7 +39,7 @@ class XOR : Environment {
 
         @JvmStatic
         fun main(arg0: Array<String>) {
-            Genome.sim = Sim(2, 20, 1, 1000000, 11 )
+            Genome.sim = Sim(2, 20, 1, 1000000, 1500, 3)
             val pool = Pool()
             pool.initializePool()
             var topGenome: Genome
@@ -52,7 +52,7 @@ class XOR : Environment {
                 topGenome = pool.topGenome
                 println("TopFitness : " + topGenome.points)
 
-                if (topGenome.points > 0.94  ) {
+                if (topGenome.points > 0.94) {
 
                     println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
                     println("species : " + pool.species.size)
@@ -68,17 +68,16 @@ class XOR : Environment {
                     }
 
 
-                    special!!.genomes
-                    pool.species.clear()
-                    pool.species += special!!
+//                    special!!.genomes
+                    pool.species = mutableListOf(special!!)
 
-                    println(   Json { isLenient = true; allowSpecialFloatingPointValues =true;prettyPrint =false }     .encodeToString(pool ))
+//                    println(Json {
+//                        isLenient = true; allowSpecialFloatingPointValues = true;prettyPrint = false
+//                    }.encodeToString(pool))
 
                 }
-                //                System.out.println("Population : " + pool.currentPopulation)
 
                 println("Generation : ${generation to pool.currentPopulation to "Species: ${pool.species.size}"} ")
-                //           System.out.println("Total number of matches played : "+TicTacToe.matches);
                 pool.breedNewGeneration()
 
                 generation++

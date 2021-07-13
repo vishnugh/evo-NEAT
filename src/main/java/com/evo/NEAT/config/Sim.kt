@@ -8,6 +8,6 @@ data class Sim(
     val STALE_POOL: Int, /*= 20*/
     val OUTPUTS: Int,/* = 1*/
     val HIDDEN_NODES: Int,/* = 1000000*/
-     val  POPULATION: Int //= 300
-
+     val  POPULATION: Int, //= 300
+    val SPECIES_DENOMINATOR: Int=6
 )

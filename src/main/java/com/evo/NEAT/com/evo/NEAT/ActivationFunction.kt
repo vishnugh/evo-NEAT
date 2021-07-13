@@ -1,7 +1,8 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.evo.NEAT.com.evo.NEAT
 
-import kotlin.math.exp
-import kotlin.math.pow
+import kotlin.math.*
 
 /*
  * Copyright (C) 2004  Derek James and Philip Tucker
@@ -36,7 +37,7 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    AbsoluteActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Absolute /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
@@ -45,25 +46,25 @@ enum class ActivationFunction {
         /**
          * Return absolute value of `input`, clamped to range [0, 1].
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double = Math.abs(input)
+        override fun invoke(input: Double): Double = abs(input)
         override fun applyDiff(x: Double) =
             /* If x == 0 this is not correct but is probably really rare*/
             if (x < 0.0) -1.0 else 1.0
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double = Double.MAX_VALUE.toDouble()
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double = 0.0
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long = 42
     },
@@ -73,28 +74,28 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    CosineActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Cosine /*implements , DifferentiableFunction*/ {
 
         /**
          * Returns cosine(input).
          */
-        override fun apply(input: Double): Double = Math.cos(input)
-        override fun applyDiff(x: Double): Double = -Math.sin(x)
+        override fun invoke(input: Double): Double = cos(input)
+        override fun applyDiff(x: Double): Double = -sin(x)
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double = 1.0
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -106,7 +107,7 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    DivideActivationFunction /*implements ActivationFunction, ActivationFunctionNonIntegrating*/ {
+    Divide /*implements , NonIntegrating*/ {
         /**
          * identifying string
          */
@@ -115,7 +116,7 @@ enum class ActivationFunction {
         /**
          * Not used, returns 0.
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return 0.0
         }
 
@@ -133,30 +134,30 @@ enum class ActivationFunction {
                 }
                 val v = input[0] / input[1]
                 if (java.lang.Double.isNaN(v) || java.lang.Double.isInfinite(v)) {
-                    val pos = Math.signum(input[0]) == Math.signum(input[1])
+                    val pos = sign(input[0]) == sign(input[1])
                     return (if (pos) Double.MAX_VALUE.toDouble() else -Double.MAX_VALUE.toDouble())
                 }
-                return Math.max(-Double.MAX_VALUE.toDouble(), Math.min(Double.MAX_VALUE.toDouble(), v))
+                return max(-Double.MAX_VALUE.toDouble(), min(Double.MAX_VALUE.toDouble(), v))
             }
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE.toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -169,7 +170,7 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    EvSailSigmoidActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    EvSailSigmoid /*implements , DifferentiableFunction*/ {
         private val SEP = 0.3
         private val DENOMINATOR = 2 * SEP * SEP
 
@@ -179,17 +180,17 @@ enum class ActivationFunction {
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //		EvSailSigmoidActivationFunction() {
+        //		EvSailSigmoid() {
         //		// no-op
         //		}
         /**
          * Approximation of classic sigmoid.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return if (input <= -SEP) {
                 0.0
             } else if (input <= 0) {
@@ -216,21 +217,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 166
@@ -240,7 +241,7 @@ enum class ActivationFunction {
     /**
      * @author cLins
      */
-    ExponentialLinearFunction /*implements ActivationFunction, DifferentiableFunction
+    ExponentialLinearFunction /*implements , DifferentiableFunction
              */ {
         /**
          * identifying string
@@ -249,9 +250,9 @@ enum class ActivationFunction {
         private val alpha = 1.0
 
 
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return if (input < 0) {
-                alpha * (Math.exp(input) - 1)
+                alpha * (exp(input) - 1)
             } else {
                 input
             }
@@ -259,7 +260,7 @@ enum class ActivationFunction {
 
         override fun applyDiff(x: Double): Double {
             return if (x < 0) {
-                alpha * Math.exp(x)
+                alpha * exp(x)
             } else {
                 1.0
             }
@@ -283,7 +284,7 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    GaussianActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Gaussian /*implements , DifferentiableFunction*/ {
         private val SLOPE = 1.0
 
         /**
@@ -292,40 +293,40 @@ enum class ActivationFunction {
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        GaussianActivationFunction() {
+        //        Gaussian() {
         //            // no-op
         //        }
         /**
          * Return `input` with Gaussian function transformation.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
-            return Math.exp(-(input * input * SLOPE))
+        override fun invoke(input: Double): Double {
+            return exp(-(input * input * SLOPE))
         }
 
         override fun applyDiff(x: Double): Double {
-            return -2 * Math.exp(-SLOPE * x * x) * SLOPE * x
+            return -2 * exp(-SLOPE * x * x) * SLOPE * x
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -337,7 +338,7 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    InverseAbsActivationFunction /*implements ActivationFunction, DifferentiableFunction */ {
+    InverseAbs /*implements , DifferentiableFunction */ {
         private val SLOPE = 0.3
 
         /**
@@ -346,41 +347,41 @@ enum class ActivationFunction {
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        InverseAbsActivationFunction() {
+        //        InverseAbs() {
         //            // no-op
         //        }
         /**
          * Inverse absolute value.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
-            return 1 / (SLOPE * Math.abs(input) + 1)
+        override fun invoke(input: Double): Double {
+            return 1 / (SLOPE * abs(input) + 1)
         }
 
         override fun applyDiff(x: Double): Double {
             // As given by Wolfram Alpha
-            return -(SLOPE * x) / (Math.abs(x) * Math.pow(1 + SLOPE * Math.abs(x), 2.0))
+            return -(SLOPE * x) / (abs(x) * (1 + SLOPE * abs(x)).pow(2.0))
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 75
@@ -392,24 +393,24 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    LinearActivationFunction /*implements ActivationFunction, DifferentiableFunction */ {
+    Linear /*implements , DifferentiableFunction */ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        LinearActivationFunction() {
+        //        Linear() {
         //            // no-op
         //        }
         /**
          * Return `input` with no transformation.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return input
         }
 
@@ -418,21 +419,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE.toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return (-Double.MAX_VALUE).toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -444,9 +445,9 @@ enum class ActivationFunction {
 //     *
 //     * @author Oliver Coleman
 //     */
-//    LogicAndActivationFunction /* extends;
+//    LogicAnd /* extends;
 //
-//	LogicActivationFunction */ {
+//	Logic */ {
 //        /**
 //         * identifying string
 //         */
@@ -489,7 +490,7 @@ enum class ActivationFunction {
 //     *
 //     * @author Oliver Coleman
 //     */
-//    LogicOrActivationFunction /*extends LogicActivationFunction */ {
+//    LogicOr /*extends Logic */ {
 //        /**
 //         * identifying string
 //         */
@@ -497,9 +498,9 @@ enum class ActivationFunction {
 //
 //
 //        /**
-//         * This class should only be accessed via ActivationFunctionFactory.
+//         * This class should only be accessed via Factory.
 //         */
-//        //		LogicOrActivationFunction() {
+//        //		LogicOr() {
 //        //		}
 //        /**
 //         * Returns the result of a logical OR over all inputs, where an input value
@@ -534,7 +535,7 @@ enum class ActivationFunction {
 //     *
 //     * @author Oliver Coleman
 //     */
-//    LogicXORActivationFunction /*extends LogicActivationFunction */ {
+//    LogicXOR /*extends Logic */ {
 //        /**
 //         * identifying string
 //         */
@@ -554,9 +555,9 @@ enum class ActivationFunction {
 //            return 42
 //        }
 //        /**
-//         * This class should only be accessed via ActivationFunctionFactory.
+//         * This class should only be accessed via Factory.
 //         */
-//        //        LogicXORActivationFunction() {
+//        //        LogicXOR() {
 //        //        }
 //        /**
 //         * Returns the result of a logical XOR over all inputs, where an input value
@@ -579,7 +580,7 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    /*   MultiplyActivationFunction *//*implements ActivationFunction, ActivationFunctionNonIntegrating*//* {
+    /*   Multiply *//*implements , NonIntegrating*//* {
         */
     /**
      * identifying string
@@ -589,9 +590,9 @@ enum class ActivationFunction {
         
         */
     /**
-     * This class should only be accessd via ActivationFunctionFactory.
+     * This class should only be accessd via Factory.
      *//*
-        //		MultiplyActivationFunction() {
+        //		Multiply() {
         //		 no-op
         //		}
         */
@@ -620,7 +621,7 @@ enum class ActivationFunction {
 
         */
     /**
-     * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+     getMaxValue
      *//*
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE
@@ -628,7 +629,7 @@ enum class ActivationFunction {
 
         */
     /**
-     * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+     getMinValue
      *//*
         override fun getMinValue(): Double {
             return -Double.MAX_VALUE
@@ -636,7 +637,7 @@ enum class ActivationFunction {
 
         */
     /**
-     * @see com.anji.nn.activationfunction.ActivationFunction.cost
+     cost
      *//*
         override fun cost(): Long {
             return 42
@@ -646,24 +647,24 @@ enum class ActivationFunction {
     /**
      * Negative linear activation function.
      */
-    NegatedLinearActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    NegatedLinear /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //		NegatedLinearActivationFunction() {
+        //		NegatedLinear() {
         //		// no-op
         //		}
         /**
          * Return `input` with opposite sign.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return -input
         }
 
@@ -672,21 +673,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE.toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return (-Double.MAX_VALUE).toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -698,23 +699,23 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    PowerActivationFunction /*implements ActivationFunction, ActivationFunctionNonIntegrating*/ {
+    Power /*implements , NonIntegrating*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //		PowerActivationFunction() {
+        //		Power() {
         //		// no-op
         //		}
         /**
          * Not used, returns 0.
          */
-        override fun apply(input: Double): Double {
-            return input*input
+        override fun invoke(input: Double): Double {
+            return input * input
         }
 
         /**
@@ -725,7 +726,7 @@ enum class ActivationFunction {
             if (input.size < 2) {
                 return input[0]
             }
-            val v = Math.pow(input[0], Math.abs(input[1]))
+            val v = input[0].pow(abs(input[1]))
             if (java.lang.Double.isNaN(v)) {
                 return 0.0
             }
@@ -735,21 +736,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 75
@@ -761,22 +762,22 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    RecipriocalActivationFunction /*implements ActivationFunction, DifferentiableFunction */ {
+    Recipriocal /*implements , DifferentiableFunction */ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //		RecipriocalActivationFunction() {
+        //		Recipriocal() {
         //		// no-op
         //		}
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             var `val` = 1 / input
             if (java.lang.Double.isNaN(`val`)) {
                 return if (input < 0) getMinValue() else getMaxValue()
@@ -797,21 +798,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE * 0.1
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -getMaxValue()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 75
@@ -840,25 +841,25 @@ enum class ActivationFunction {
      * @author Oliver Coleman
      * Edited by Christian Lins, 2020
      */
-    RectifierActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Rectifier /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        RectifierActivationFunction() {
+        //        Rectifier() {
         //            // no-op
         //        }
         /**
          * Returns 0 if the input <= 0, otherwise the input value.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(x: Double): Double {
-            return Math.max(0.0, x)
+        override fun invoke(x: Double): Double {
+            return max(0.0, x)
         }
 
         override fun applyDiff(x: Double): Double {
@@ -870,45 +871,45 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE.toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
         }
     },
-    LeakyRectifierActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    LeakyRectifier /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        RectifierActivationFunction() {
+        //        Rectifier() {
         //            // no-op
         //        }
         /**
          * Returns 0 if the input <= 0, otherwise the input value.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(x: Double): Double {
-            return Math.max(-0.01, x)
+        override fun invoke(x: Double): Double {
+            return max(-0.01, x)
         }
 
         override fun applyDiff(x: Double): Double {
@@ -920,21 +921,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE.toDouble()
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -946,40 +947,40 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    SigmoidActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Sigmoid /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessed via ActivationFunctionFactory.
+         * This class should only be accessed via Factory.
          */
-        //        SigmoidActivationFunction() {
+        //        Sigmoid() {
         //        }
-        override fun apply(input: Double): Double = 1.0 / (1.0 + exp(-input))
+        override fun invoke(input: Double): Double = 1.0 / (1.0 + exp(-input))
 
         override fun applyDiff(input: Double): Double {
-            val fn = apply(input)
+            val fn = invoke(input)
             return fn * (1 - fn)
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 497
@@ -1007,16 +1008,16 @@ enum class ActivationFunction {
     /**
      * @author Philip Tucker
      */
-    SignedClampedLinearActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    SignedClampedLinear /*implements , DifferentiableFunction*/ {
         /**
          * id string
          */
 
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return if (input <= -1.0) {
                 -1.0
             } else if (input >= 1.0) {
@@ -1035,21 +1036,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -1061,23 +1062,23 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    SignedStepActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    SignedStep /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        SignedStepActivationFunction() {
+        //        SignedStep() {
         //            // no-op
         //        }
         /**
          * @return -1 if `input`< 0, 1 otherwise @see com.an
-         * ji.nn.activationfunction.ActivationFunction#apply(double)
+         * ji.nn..#apply(double)
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return (if (input <= 0) -1.0 else 1.0)
         }
 
@@ -1086,21 +1087,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 40
@@ -1112,45 +1113,45 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    SineActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Sine /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        SineActivationFunction() {
+        //        Sine() {
         //            // no-op
         //        }
         /**
          * Returns sine(input).
          */
-        override fun apply(input: Double): Double {
-            return Math.sin(input)
+        override fun invoke(input: Double): Double {
+            return sin(input)
         }
 
         override fun applyDiff(x: Double): Double {
-            return Math.cos(x)
+            return cos(x)
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -1162,54 +1163,54 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    SqrtActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Sqrt /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        SqrtActivationFunction() {
+        //        Sqrt() {
         //            // no-op
         //        }
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             if (input > 0) {
-                return Math.sqrt(input)
+                return sqrt(input)
             }
             return if (input < 0) {
-                -Math.sqrt(-input)
+                -sqrt(-input)
             } else 0.0
         }
 
         override fun applyDiff(x: Double): Double {
             return if (x > 0) {
-                1 / 2 * Math.sqrt(x)
+                1 / 2 * sqrt(x)
             } else if (x < 0) {
-                1 / 2 * Math.sqrt(-x)
+                1 / 2 * sqrt(-x)
             } else 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 75
@@ -1221,29 +1222,29 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    SqrtAndLinearActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    SqrtAndLinear /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        SqrtAndLinearActivationFunction() {
+        //        SqrtAndLinear() {
         //            // no-op
         //        }
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             if (input >= -1 && input <= 1) {
                 return input
             }
             return if (input > 0) {
-                Math.sqrt(input)
+                sqrt(input)
             } else {
-                -Math.sqrt(-input)
+                -sqrt(-input)
             }
         }
 
@@ -1252,28 +1253,28 @@ enum class ActivationFunction {
                 return 1.0
             }
             return if (x > 0) {
-                1 / 2 * Math.sqrt(x)
+                1 / 2 * sqrt(x)
             } else {
-                1 / 2 * Math.sqrt(-x)
+                1 / 2 * sqrt(-x)
             }
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -Double.MAX_VALUE
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 75
@@ -1285,7 +1286,7 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    SteepSigmoidActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    SteepSigmoid /*implements , DifferentiableFunction*/ {
         private val SLOPE = 4.9
 
         /**
@@ -1294,34 +1295,34 @@ enum class ActivationFunction {
 
 
         /**
-         * This class should only be accessed via ActivationFunctionFactory.
+         * This class should only be accessed via Factory.
          */
-        //        SteepSigmoidActivationFunction() {
+        //        SteepSigmoid() {
         //        }
-        override fun apply(input: Double): Double {
-            return 1.0 / (1.0 + Math.exp(-(input * SLOPE)))
+        override fun invoke(input: Double): Double {
+            return 1.0 / (1.0 + exp(-(input * SLOPE)))
         }
 
         override fun applyDiff(x: Double): Double {
-            return SLOPE * Math.exp(-SLOPE * x) / Math.pow(1 + Math.exp(-SLOPE * x), 2.0)
+            return SLOPE * exp(-SLOPE * x) / (1 + exp(-SLOPE * x)).pow(2.0)
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 497
@@ -1333,23 +1334,23 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    StepActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Step /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        StepActivationFunction() {
+        //        Step() {
         //            // no-op
         //        }
         /**
          * @return 0. if `input`< 0, 1 otherwise @see com.an
-         * ji.nn.activationfunction.ActivationFunction#apply(double)
+         * ji.nn..#apply(double)
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             return (if (input <= 0) 0.0 else 1.toDouble())
         }
 
@@ -1358,21 +1359,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 40
@@ -1384,48 +1385,48 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    TanhActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    Tanh /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        TanhActivationFunction() {
+        //        Tanh() {
         //            // no-op
         //        }
         /**
          * Hyperbolic tangent.
          *
          * @param x
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(x: Double): Double {
-            return -1 + 2 / (1 + Math.exp(-2 * x))
+        override fun invoke(x: Double): Double {
+            return -1 + 2 / (1 + exp(-2 * x))
         }
 
         override fun applyDiff(x: Double): Double {
-            return 0.5 * Math.log((1 + x) / (1 - x))
+            return 0.5 * ln((1.0 + x) / (1.0 - x))
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 385
@@ -1439,50 +1440,50 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    TanhCubicActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    TanhCubic /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        TanhCubicActivationFunction() {
+        //        TanhCubic() {
         //            // no-op
         //        }
         /**
          * Hyperbolic tangent of cubic.
          *
          * @param x
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(x: Double): Double {
-            return -1 + 2 / (1 + Math.exp(Math.pow(-x, 3.0)))
+        override fun invoke(x: Double): Double {
+            return -1.0 + 2.0 / (1.0 + exp((-x).pow(3.0)))
         }
 
         override fun applyDiff(x: Double): Double {
             // As given by Wolfram Alpha
-            return 6 * Math.exp(-Math.pow(x, 3.0)) * Math.pow(x, 2.0) /
-                    Math.pow(1 + Math.exp(Math.pow(-x, 3.0)), 2.0)
+            return 6.0 * exp(-x.pow(3.0)) * x.pow(2.0) /
+                    (1.0 + exp((-x).pow(3.0))).pow(2.0)
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 1231
@@ -1495,7 +1496,7 @@ enum class ActivationFunction {
      *
      * @author Philip Tucker
      */
-    BipolarSigmoidActivationFunction /*implements ActivationFunction */ {
+    BipolarSigmoid /*implements  */ {
         private val SLOPE = 2.0
 
         /**
@@ -1504,41 +1505,41 @@ enum class ActivationFunction {
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        BipolarSigmoidActivationFunction() {
+        //        BipolarSigmoid() {
         //            // no-op
         //        }
         /**
          * Modified classic sigmoid.
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
-            return 2.0 / (1.0 + Math.exp(-(input * SLOPE))) - 1.0
+        override fun invoke(input: Double): Double {
+            return 2.0 / (1.0 + exp(-(input * SLOPE))) - 1.0
         }
 
         override fun applyDiff(x: Double): Double {
             // As given by Wolfram Alpha
-            return 2.0 * Math.exp(-SLOPE * x) * SLOPE / Math.pow(1 + Math.exp(-SLOPE * x), 2.0)
+            return 2.0 * exp(-SLOPE * x) * SLOPE / (1 + exp(-SLOPE * x)).pow(2.0)
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return -1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 497
@@ -1550,25 +1551,25 @@ enum class ActivationFunction {
      *
      * @author Oliver Coleman
      */
-    ClampedAbsoluteActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    ClampedAbsolute /*implements , DifferentiableFunction*/ {
         /**
          * identifying string
          */
 
 
         /**
-         * This class should only be accessd via ActivationFunctionFactory.
+         * This class should only be accessd via Factory.
          */
-        //        ClampedAbsoluteActivationFunction() {
+        //        ClampedAbsolute() {
         //            // no-op
         //        }
         /**
          * Return absolute value of `input`, clamped to range [0, 1].
          *
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
-            return Math.min(Math.abs(input), 1.0)
+        override fun invoke(input: Double): Double {
+            return min(abs(input), 1.0)
         }
 
         override fun applyDiff(x: Double): Double {
@@ -1589,21 +1590,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -1631,22 +1632,22 @@ enum class ActivationFunction {
     /**
      * @author Philip Tucker
      */
-    ClampedLinearActivationFunction /*implements ActivationFunction, DifferentiableFunction */ {
+    ClampedLinear /*implements , DifferentiableFunction */ {
         /**
          * unique ID string
          */
 
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.apply
+         apply
          */
-        override fun apply(input: Double): Double {
-            return if (input <= 0) {
-                0.0
-            } else if (input >= 1) {
-                1.0
-            } else {
-                input
+        override fun invoke(input: Double): Double {
+            return when {
+                input <= 0 -> 0.0
+                input >= 1 -> 1.0
+                else -> {
+                    input
+                }
             }
         }
 
@@ -1659,21 +1660,21 @@ enum class ActivationFunction {
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+         getMaxValue
          */
         override fun getMaxValue(): Double {
             return 1.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+         getMinValue
          */
         override fun getMinValue(): Double {
             return 0.0
         }
 
         /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+         cost
          */
         override fun cost(): Long {
             return 42
@@ -1683,7 +1684,7 @@ enum class ActivationFunction {
     /**
      * @author Oliver Coleman
      */
-    ConvertToSignedActivationFunction /*implements ActivationFunction, DifferentiableFunction*/ {
+    ConvertToSigned /*implements , DifferentiableFunction*/ {
         /**
          * unique ID string
          */
@@ -1692,7 +1693,7 @@ enum class ActivationFunction {
         /**
          * @see com.anji.nn.activationfunction.ActivationFunction.apply
          */
-        override fun apply(input: Double): Double {
+        override fun invoke(input: Double): Double {
             var input = input
             if (input <= 0) {
                 input = 0.0
@@ -1731,37 +1732,38 @@ enum class ActivationFunction {
             return 42
         }
     },
-    LogicActivationFunction /*extends ActivationFunction implements ActivationFunctionNonIntegrating */ {
-        /**
-         * Not used as this is a non-integrating function, returns 0.
-         *
-         * @see .apply
-         */
-        override fun apply(input: Double): Double {
-            return 0.0
-        }
-
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
-         */
-        override fun getMaxValue(): Double {
-            return 1.0
-        }
-
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
-         */
-        override fun getMinValue(): Double {
-            return 0.0
-        }
-
-        /**
-         * @see com.anji.nn.activationfunction.ActivationFunction.cost
-         */
-        override fun cost(): Long {
-            return 42
-        }
-    };
+//    LogicActivationFunction /*extends ActivationFunction implements ActivationFunctionNonIntegrating */ {
+//        /**
+//         * Not used as this is a non-integrating function, returns 0.
+//         *
+//         * @see .apply
+//         */
+//        override fun invoke(input: Double): Double {
+//            return 0.0
+//        }
+//
+//        /**
+//         * @see com.anji.nn.activationfunction.ActivationFunction.getMaxValue
+//         */
+//        override fun getMaxValue(): Double {
+//            return 1.0
+//        }
+//
+//        /**
+//         * @see com.anji.nn.activationfunction.ActivationFunction.getMinValue
+//         */
+//        override fun getMinValue(): Double {
+//            return 0.0
+//        }
+//
+//        /**
+//         * @see com.anji.nn.activationfunction.ActivationFunction.cost
+//         */
+//        override fun cost(): Long {
+//            return 42
+//        }
+//    }
+    ;
 
     /**
      * Apply activation function to input.
@@ -1769,7 +1771,7 @@ enum class ActivationFunction {
      * @param input
      * @return double result of applying activation function to `input`
      */
-    abstract fun apply(input: Double): Double
+    abstract operator fun invoke(input: Double): Double
 
     open fun apply(input: DoubleArray, bias: Double): Double {
         TODO()
