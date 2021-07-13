@@ -1,14 +1,17 @@
 package com.evo.NEAT
 
+//import org.eclipse.collections.api.tuple.primitive.IntObjectPair
+//import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import com.evo.NEAT.config.NEAT_Config
 import com.evo.NEAT.config.Sim
 import examples.SineRider.Companion.HIDDEN_NODES
 import examples.SineRider.Companion.INPUTS
 import examples.SineRider.Companion.OUTPUTS
+import javolution.util.FastMap
+import javolution.util.FastSet
+import javolution.util.FastSortedMap
 import javolution.util.FastTable
 import kotlinx.coroutines.newFixedThreadPoolContext
-//import org.eclipse.collections.api.tuple.primitive.IntObjectPair
-//import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
@@ -29,7 +32,7 @@ class Genome : Comparable<Genome> {
 
     constructor(child: Genome) {
         this.connections = FastTable<ConnectionGene>()
-        this.nodes = sortedMapOf()
+        this.nodes = FastSortedMap()
         this.mutationRates = MutationKeys.mutationRates
         for (c in child.connections) connections.add(ConnectionGene(c))
         fitness = child.fitness
@@ -45,10 +48,11 @@ class Genome : Comparable<Genome> {
     var points = 0.0
 
     // Can remove below setter-getter after testing
-    var connections: MutableList<ConnectionGene> = FastTable() // DNA- MAin archive of gene information
+    var connections: FastTable<ConnectionGene> = FastTable() // DNA- MAin archive of gene information
 
     /*@Serializable*/
-    var nodes: MutableMap<Int, NodeGene> = sortedMapOf()
+    var nodes: FastMap<Int, NodeGene> = FastMap()
+
 
     // Generated while performing network operation
     var adjustedFitness = 0.0// For number of child to breed in species
@@ -62,9 +66,8 @@ class Genome : Comparable<Genome> {
                 (INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS).map {
                     it to NodeGene(0.0)
                 }) +
-                (INPUTS to NodeGene(1.0) /* Bias output layer */)).toMap(linkedMapOf())
+                (INPUTS to NodeGene(1.0) /* Bias output layer */)).toMap(FastMap())
         // hidden layer
-
         connections.forEach { con ->
             if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0.0)
             if (!nodes.containsKey(con.out)) nodes[con.out] =
@@ -100,11 +103,10 @@ class Genome : Comparable<Genome> {
     // Mutations
     fun Mutate() {
         // Mutate mutation rates
-        for ((key, value) in mutationRates) {
-            if (rand.nextBoolean()) mutationRates[key] = 0.95 * value.toDouble() else mutationRates[key] =
-                1.05263f * value.toDouble()
-        }
-        (MutationKeys.WEIGHT_MUTATION_CHANCE.ordinal..MutationKeys.ENABLE_MUTATION_CHANCE.ordinal).forEach {
+        for ((key, value) in mutationRates)
+            if (rand.nextBoolean()) mutationRates[key] = 0.95 * value else mutationRates[key] =
+                1.05263f * value
+        for (it in MutationKeys.WEIGHT_MUTATION_CHANCE.ordinal..MutationKeys.ENABLE_MUTATION_CHANCE.ordinal) {
             MutationKeys.values()[it].let { mk ->
                 if (this.mutationRates[mk]!!.toDouble() > rand.nextDouble()) mk.fn(this)
             }
@@ -115,7 +117,7 @@ class Genome : Comparable<Genome> {
         for (c in connections) if (rand.nextDouble() < NEAT_Config.WEIGHT_CHANCE)
             if (rand.nextDouble() < NEAT_Config.PERTURB_CHANCE) c.weight =
                 c.weight + (rand.nextDouble(-1.0, (1.0 + Double.MIN_VALUE))) * NEAT_Config.STEPS else c.weight =
-                rand.nextDouble(-2.0, 2.0).toDouble()
+                rand.nextDouble(-2.0, 2.0)
     }
 
     fun mutateAddConnection(forceBais: Boolean) {
@@ -259,13 +261,14 @@ class Genome : Comparable<Genome> {
                 parent2 = temp
             }
             val child = Genome()
-            val geneMap1 = TreeMap<Int, ConnectionGene>()
-            val geneMap2 = TreeMap<Int, ConnectionGene>()
+            val geneMap1 = FastSortedMap<Int, ConnectionGene>()
+            val geneMap2 = FastSortedMap<Int, ConnectionGene>()
             for (con in parent1.connections) geneMap1[con.innovation] = con
             for (con in parent2.connections) geneMap2[con.innovation] = con
-            val innovationP1: Set<Int> = geneMap1.keys
-            val innovationP2: Set<Int> = geneMap2.keys
-            val allInnovations: MutableSet<Int> = LinkedHashSet(innovationP1)
+            val innovationP1: FastSet<Int> = geneMap1.keys
+            val innovationP2: FastSet<Int> = geneMap2.keys
+            val allInnovations = FastSet<Int>()
+            allInnovations.addAll(innovationP1)
             allInnovations.addAll(innovationP2)
             for (key in allInnovations) {
                 var trait: ConnectionGene?
@@ -296,7 +299,7 @@ class Genome : Comparable<Genome> {
             val rollingSize = min(sz1, sz2)
             var tally = 0
             if (rollingSize >= matchSize) {
-                val mette = LinkedHashSet<Int>(combinedSize - matchSize)
+                val mette = FastSet<Int>()//combinedSize - matchSize
                 val intRange = 0 until max(sz1, sz2)
                 for (x: Int in intRange) {
                     if (geneMap1.hasNext() && !mette.add(geneMap1.next().innovation)) tally++
