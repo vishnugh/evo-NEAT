@@ -26,9 +26,10 @@ class Species : Comparable<Species> {
         genomes.add(top)
     }
 
-    fun calculateGenomeAdjustedFitness() {
-        for (g in genomes) g.adjustedFitness = g.fitness / genomes.size
-    }
+    fun calculateGenomeAdjustedFitness()=  genomes.map { g ->
+            (g.fitness / genomes.size).also { g.adjustedFitness = it }
+        }.average()
+
 
     val totalAdjustedFitness: Double
         get() {

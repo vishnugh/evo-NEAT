@@ -60,8 +60,7 @@ class Genome(
 
     fun generateNetwork() {//TODO: dirty flag
 
-        if (nodes.isEmpty())
-        /* Bias output layer */ {
+        if (nodes.isEmpty())  {
             nodes
                 .apply { for (i in 0 until sim.INPUTS) add(NodeGene(i)) }
                 .apply { add(NodeGene(sim.INPUTS, 1.0))/*bias*/ }
@@ -77,12 +76,6 @@ class Genome(
         assert(true)
     }
 
-    inline fun getNodeByKey(key: Int) =
-        when (key < Companion.INDEXABLE) {
-            true -> (+nodes)(key)
-            else -> (+nodes)(key)
-
-        }
 
 
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {

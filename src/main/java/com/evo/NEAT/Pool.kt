@@ -5,7 +5,6 @@ import com.evo.NEAT.Genome.Companion.rand
 import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
 import javolution.util.FastTable
-import kotlinx.serialization.Serializable
 import java.util.*
 
 /**
@@ -74,9 +73,7 @@ class Pool {
         poolStaleness++
     }
 
-    fun calculateGenomeAdjustedFitness() {
-        for (s in species) s.calculateGenomeAdjustedFitness()
-    }
+    fun calculateGenomeAdjustedFitness() = species.map(Species::calculateGenomeAdjustedFitness).average()
 
     fun breedNewGeneration(): FastTable<Genome> {
         calculateGenomeAdjustedFitness()
