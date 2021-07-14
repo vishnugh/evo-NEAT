@@ -54,6 +54,7 @@ class XOR : Environment {
 
                 if (topGenome.points > 0.94) {
 
+                    println ("nodes access  hit/miss ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
                     println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
                     println("species : " + pool.species.size)
                     println(topGenome.toString())

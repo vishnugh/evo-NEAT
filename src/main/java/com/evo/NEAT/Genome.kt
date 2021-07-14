@@ -1,12 +1,11 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.evo.NEAT
 
 //import org.eclipse.collections.api.tuple.primitive.IntObjectPair
 //import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import com.evo.NEAT.config.NEAT_Config
 import com.evo.NEAT.config.Sim
-import examples.SineRider.Companion.HIDDEN_NODES
-import examples.SineRider.Companion.INPUTS
-import examples.SineRider.Companion.OUTPUTS
 import javolution.util.FastSet
 import javolution.util.FastSortedMap
 import javolution.util.FastSortedTable
@@ -17,6 +16,7 @@ import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import javax.management.RuntimeErrorException
 import kotlin.math.max
 import kotlin.math.min
@@ -26,84 +26,89 @@ import kotlin.random.Random
  * Created by vishnughosh on 28/02/17.
  */
 /*@Serializable*/
-class Genome : Comparable<Genome> {
-    constructor() {
-        mutationRates = MutationKeys.mutationRates
-    }
+class Genome(
+// Generated while performing network operation
+/*@Serializable*/
+    val nodes: FastSortedTable<NodeGene> = FastSortedTable<NodeGene>(object : Equality<NodeGene> {
+        override fun compare(left: NodeGene, right: NodeGene): Int = left.key.compareTo(right.key)
+        override fun hashCodeOf(it: NodeGene) = it.key
+        override fun areEqual(left: NodeGene?, right: NodeGene?) = left?.key == right?.key
+    }),
+    /*@Serializable*/
+    val mutationRates: MutableMap<MutationKeys, Double> = EnumMap(MutationKeys.mutationRates),
+    /** Global Percentile Rank (higher the better)*/
+    var fitness: Double = 0.0,
+    var points: Double = 0.0,// Can remove below setter-getter after testing
+    val connections: FastTable<ConnectionGene> = FastTable(), // DNA- MAin archive of gene information// For number of child to breed in species
+    var adjustedFitness: Double = 0.0,
+) : Comparable<Genome> {
 
-    constructor(child: Genome) {
-        this.connections = FastTable<ConnectionGene>()
-        this.nodes = FastSortedTable(object : Equality<NodeGene> {
-            override fun compare(left: NodeGene, right: NodeGene): Int = left.key.compareTo(right.key)
+//    mutationRates = MutationKeys.mutationRates
 
-            override fun hashCodeOf(it: NodeGene) = it.key
-
-            override fun areEqual(left: NodeGene?, right: NodeGene?) = left?.key == right?.key
-        })
-
-        this.mutationRates = MutationKeys.mutationRates
-        for (c in child.connections) connections.add(ConnectionGene(c))
+    constructor(child: Genome) : this() {
+        this.connections.addAll(child.connections)
         fitness = child.fitness
         adjustedFitness = child.adjustedFitness
-        mutationRates = EnumMap(child.mutationRates)
+        mutationRates.putAll(child.mutationRates)
 //        color = child.color
     }
 
     /* var color: ActivationFunction = ActivationFunction.values().random()*/
 
-    /** Global Percentile Rank (higher the better)*/
-    var fitness = 0.0
-    var points = 0.0
+    fun generateNetwork() {//TODO: dirty flag
 
-    // Can remove below setter-getter after testing
-    var connections: FastTable<ConnectionGene> = FastTable() // DNA- MAin archive of gene information
-
-    /*@Serializable*/
-    var nodes: FastSortedTable<NodeGene> = FastSortedTable()
-
-
-    // Generated while performing network operation
-    var adjustedFitness = 0.0// For number of child to breed in species
-
-    /*@Serializable*/
-    private var mutationRates: MutableMap<MutationKeys, Double> = EnumMap(MutationKeys.mutationRates)
-
-    fun generateNetwork() {
-        /* Bias output layer */
-        nodes = FastSortedTable<NodeGene>().apply {
-            for (i in 0 until INPUTS) add(NodeGene(i, 0.0))/*bias*/
-        }.apply { add(NodeGene(INPUTS, 1.0)) }.apply {
-            for (i in INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS) add(NodeGene(i, 0.0))
+        if (nodes.isEmpty())
+        /* Bias output layer */ {
+            nodes
+                .apply { for (i in 0 until sim.INPUTS) add(NodeGene(i)) }
+                .apply { add(NodeGene(sim.INPUTS, 1.0))/*bias*/ }
+                .apply { for (i in Companion.INDEXABLE until Companion.INDEXABLE + sim.OUTPUTS) add(NodeGene(i, 0.0)) }
         }
 
         // hidden layer
         connections.forEach { con ->
-            if (nodes.any { it.key == con.into }) nodes += NodeGene(con.into, 0.0)
-            if (nodes.any { it.key == con.out }) nodes +=
-                NodeGene(con.out, 0.0, FastTable<ConnectionGene>().also { it += con })
+            if (!nodes.any { it.key == con.keyInto }) nodes.addLast(NodeGene(con.keyInto, 0.0))
+            if (!nodes.any { it.key == con.keyOut }) nodes.addLast(
+                NodeGene(con.keyOut, 0.0, FastTable<ConnectionGene>().also { it += con }))
         }
+        assert(true)
+    }
+
+    inline fun getNodeByKey(key: Int) =
+        when (key < Companion.INDEXABLE) {
+            true -> (+nodes)(key)
+            else -> (+nodes)(key)
+
+        }
+
+    inline operator fun FastSortedTable<NodeGene>.unaryMinus() = { x: Int -> this.filtered { x == it.key }.first() }
+    val misses = AtomicInteger(0)
+    val accesses = AtomicInteger(0)
+    inline operator fun FastSortedTable<NodeGene>.unaryPlus() = { x: Int ->
+        this[x].also { accesses.getAndIncrement() }.takeIf { x == it.key }
+            ?: (-this)(x).also { misses.getAndIncrement() }
     }
 
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
         generateNetwork()
-        for (i in 0 until INPUTS) nodes[i]!!.impulse = inputs[i]
-        nodes.filter { it.key > INPUTS }.forEach { node ->
+        for (i in 0 until sim.INPUTS) (+nodes)(i)!!.impulse = inputs[i]
+        nodes.filtered { it.key > sim.INPUTS }.forEach { node ->
             node.incomingCon.filter {
                 it.isEnabled
             }.map { (into, _, _, weight, _): ConnectionGene ->
-                nodes[into]!!.impulse * weight
+                (+nodes)(into)!!.impulse * weight
             }.sum().let { sum -> node.run { impulse = activationFunction(sum) } }
 
         }
-        val i1 = INPUTS + HIDDEN_NODES
-        return DoubleArray(OUTPUTS) { i ->
-            nodes[i1 + i]!!.run { activationFunction.invoke(impulse) }
+        val i1 = sim.INPUTS + sim.HIDDEN_NODES
+        return DoubleArray(sim.OUTPUTS) { i ->
+            nodes.filtered { it.key == i1 + i }.first().let { it.activationFunction.invoke(it.impulse) }
         }
     }
 
-    /*   private fun doColor(x: Double): Double {
-           return color.apply(x.toDouble()).toDouble()
-       }*/
+/*   private fun doColor(x: Double): Double {
+       return color.apply(x.toDouble()).toDouble()
+   }*/
 
     // Mutations
     fun Mutate() {
@@ -125,26 +130,29 @@ class Genome : Comparable<Genome> {
                 rand.nextDouble(-2.0, 2.0)
     }
 
+
+    /**
+     * tmfm happens here.
+     */
     fun mutateAddConnection(forceBais: Boolean) {
         generateNetwork()
         var i = 0
         var j = 0
-        val random2 = rand.nextInt(INPUTS + 1, nodes.size)
+        val random2 = rand.nextInt(nodes.size - sim.INPUTS - 1) + sim.INPUTS + 1
         var random1 = rand.nextInt(nodes.size)
-        if (forceBais) random1 = INPUTS
+        if (forceBais) random1 = sim.INPUTS
         var node1 = -1
         var node2 = -1
-
-        for (n in nodes) {
+        for (k in nodes.mapped(NodeGene::key)) {
             if (random1 == i) {
-                n.key.also { node1 = it }
+                node1 = k
                 break
             }
             i++
         }
-        for (n in nodes) {
+        for (k in nodes.mapped(NodeGene::key)) {
             if (random2 == j) {
-                node2 = n.key
+                node2 = k
                 break
             }
             j++
@@ -153,18 +161,14 @@ class Genome : Comparable<Genome> {
 //	System.out.println("Node1 = "+node1 +" node 2 = "+node2);
         if (node1 >= node2) return
         for (con in nodes[node2]!!.incomingCon) {
-            if (con.into == node1) return
+            if (con.keyInto == node1) return
         }
         if (node1 < 0 || node2 < 0) throw RuntimeErrorException(null) // TODO Pool.newInnovation(node1, node2)
-        connections.add(
-            ConnectionGene(
-                node1,
-                node2,
-                InnovationCounter.newInnovation(),
-                4 * rand.nextDouble() - 2,
-                true
-            )
-        ) // Add innovation and weight
+        connections.add(ConnectionGene(node1,
+            node2,
+            innovation.getAndIncrement(),
+            rand.nextDouble(),
+            true)) // Add innovation and weight
     }
 
     fun mutateAddNode() {
@@ -175,18 +179,18 @@ class Genome : Comparable<Genome> {
             while (!randomCon.isEnabled) {
                 randomCon = connections[rand.nextInt(connections.size)]
                 timeoutCount++
-                if (timeoutCount > HIDDEN_NODES) return
+                if (timeoutCount > sim.HIDDEN_NODES) return
             }
-            val nextNode = nodes.size - OUTPUTS
+            val nextNode = nodes.size -sim. OUTPUTS
             randomCon.isEnabled = false
             connections.add(
                 ConnectionGene(
-                    randomCon.into,
+                    randomCon.keyInto,
                     nextNode,
                     /**
                      * identifying string
                      */
-                    InnovationCounter.newInnovation(),
+                    innovation.getAndIncrement(),
                     1.0,
                     true
                 )
@@ -194,8 +198,8 @@ class Genome : Comparable<Genome> {
             connections.add(
                 ConnectionGene(
                     nextNode,
-                    randomCon.out,
-                    InnovationCounter.newInnovation(),
+                    randomCon.keyOut,
+                    innovation.getAndIncrement(),
                     randomCon.weight,
                     true
                 )
@@ -254,6 +258,7 @@ class Genome : Comparable<Genome> {
 
     companion object {
         val rand = Random
+        val innovation = AtomicInteger(0)
 
         @JvmStatic
         fun crossOver(p1: Genome, p2: Genome): Genome {
@@ -268,8 +273,8 @@ class Genome : Comparable<Genome> {
             val child = Genome()
             val geneMap1 = FastSortedMap<Int, ConnectionGene>()
             val geneMap2 = FastSortedMap<Int, ConnectionGene>()
-            for (con in parent1.connections) geneMap1[con.innovation] = con
-            for (con in parent2.connections) geneMap2[con.innovation] = con
+            for (con in parent1.connections) geneMap1[con.innovationKey] = con
+            for (con in parent2.connections) geneMap2[con.innovationKey] = con
             val innovationP1: FastSet<Int> = geneMap1.keys
             val innovationP2: FastSet<Int> = geneMap2.keys
             val allInnovations = FastSet<Int>()
@@ -307,8 +312,8 @@ class Genome : Comparable<Genome> {
                 val mette = FastSet<Int>()//combinedSize - matchSize
                 val intRange = 0 until max(sz1, sz2)
                 for (x: Int in intRange) {
-                    if (geneMap1.hasNext() && !mette.add(geneMap1.next().innovation)) tally++
-                    if (geneMap2.hasNext() && !mette.add(geneMap2.next().innovation)) tally++
+                    if (geneMap1.hasNext() && !mette.add(geneMap1.next().innovationKey)) tally++
+                    if (geneMap2.hasNext() && !mette.add(geneMap2.next().innovationKey)) tally++
                     if (tally >= matchSize) return true
                 }
             }
@@ -318,13 +323,14 @@ class Genome : Comparable<Genome> {
         val context = newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(), "population")
 
         lateinit var sim: Sim
+        val INDEXABLE: Int by lazy { (sim).run { INPUTS + HIDDEN_NODES   } }
 
     }
 
     override fun toString(): String {
         val unqLinks = connections.filter { it.isEnabled }
-        val inList: List<Int> = unqLinks.map { it.into }.distinct()
-        val outList: List<Int> = unqLinks.map { it.out }.distinct()
+        val inList: List<Int> = unqLinks.map { it.keyInto }.distinct()
+        val outList: List<Int> = unqLinks.map { it.keyOut }.distinct()
         val allinks: List<Int> = inList + outList
         return "Genome(fitness=$fitness, points=$points, adjustedFitness=$adjustedFitness," +
                 "mutationRates=$mutationRates, connectionGeneList={" +
