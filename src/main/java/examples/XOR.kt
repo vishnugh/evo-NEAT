@@ -1,15 +1,10 @@
 package examples
 
-import com.evo.NEAT.Environment
-import com.evo.NEAT.Genome
-import com.evo.NEAT.Pool
-import com.evo.NEAT.Species
+import com.evo.NEAT.*
 import com.evo.NEAT.config.Sim
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.lang.Math.abs
 import kotlin.random.Random
 
@@ -54,7 +49,7 @@ class XOR : Environment {
 
                 if (topGenome.points > 0.94) {
 
-                    println ("nodes access  hit/miss ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
+                    println("nodes access  hit(${ accesses.get() to ( accesses.get() -  misses.get())})/miss(${ misses.get()}) ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
                     println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
                     println("species : " + pool.species.size)
                     println(topGenome.toString())

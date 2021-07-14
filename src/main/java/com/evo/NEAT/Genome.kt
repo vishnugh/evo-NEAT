@@ -4,6 +4,8 @@ package com.evo.NEAT
 
 //import org.eclipse.collections.api.tuple.primitive.IntObjectPair
 //import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
+import com.evo.NEAT.Genome.Companion.INDEXABLE
+import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
 import com.evo.NEAT.config.Sim
 import javolution.util.FastSet
@@ -81,28 +83,21 @@ class Genome(
 
         }
 
-    inline operator fun FastSortedTable<NodeGene>.unaryMinus() = { x: Int -> this.filtered { x == it.key }.first() }
-    val misses = AtomicInteger(0)
-    val accesses = AtomicInteger(0)
-    inline operator fun FastSortedTable<NodeGene>.unaryPlus() = { x: Int ->
-        this[x].also { accesses.getAndIncrement() }.takeIf { x == it.key }
-            ?: (-this)(x).also { misses.getAndIncrement() }
-    }
 
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
         generateNetwork()
-        for (i in 0 until sim.INPUTS) (+nodes)(i)!!.impulse = inputs[i]
+        for (i in 0 until sim.INPUTS) (+nodes)(i).impulse = inputs[i]
         nodes.filtered { it.key > sim.INPUTS }.forEach { node ->
             node.incomingCon.filter {
                 it.isEnabled
             }.map { (into, _, _, weight, _): ConnectionGene ->
-                (+nodes)(into)!!.impulse * weight
+                (+nodes)(into).impulse * weight
             }.sum().let { sum -> node.run { impulse = activationFunction(sum) } }
 
         }
         val i1 = sim.INPUTS + sim.HIDDEN_NODES
         return DoubleArray(sim.OUTPUTS) { i ->
-            nodes.filtered { it.key == i1 + i }.first().let { it.activationFunction.invoke(it.impulse) }
+            (-nodes)(i1 + i).run { activationFunction.invoke(impulse) }
         }
     }
 
@@ -160,7 +155,7 @@ class Genome(
         //	System.out.println("random1 = "+random1 +" random2 = "+random2);
 //	System.out.println("Node1 = "+node1 +" node 2 = "+node2);
         if (node1 >= node2) return
-        for (con in nodes[node2]!!.incomingCon) {
+        for (con in (-nodes)(node2)!!.incomingCon) {
             if (con.keyInto == node1) return
         }
         if (node1 < 0 || node2 < 0) throw RuntimeErrorException(null) // TODO Pool.newInnovation(node1, node2)
@@ -181,7 +176,7 @@ class Genome(
                 timeoutCount++
                 if (timeoutCount > sim.HIDDEN_NODES) return
             }
-            val nextNode = nodes.size -sim. OUTPUTS
+            val nextNode = nodes.size - sim.OUTPUTS
             randomCon.isEnabled = false
             connections.add(
                 ConnectionGene(
@@ -323,7 +318,7 @@ class Genome(
         val context = newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(), "population")
 
         lateinit var sim: Sim
-        val INDEXABLE: Int by lazy { (sim).run { INPUTS + HIDDEN_NODES   } }
+        val INDEXABLE: Int by lazy { (sim).run { INPUTS + HIDDEN_NODES } }
 
     }
 
@@ -345,5 +340,14 @@ class Genome(
     }
 }
 
-
+inline operator fun FastSortedTable<NodeGene>.unaryMinus() = { x: Int -> this.filtered { x == it.key }.first() }
+val misses = AtomicInteger(0)
+val accesses = AtomicInteger(0)
+inline operator fun FastSortedTable<NodeGene>.unaryPlus() = { x: Int ->
+    accesses.getAndIncrement().let{
+        if (x > INDEXABLE) (-this)(x) else
+            this[x].takeIf { sim.INPUTS >= x || x == it.key }
+                ?: (-this)(x).also { misses.getAndIncrement() }
+    }
+}
 
