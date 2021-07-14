@@ -7,10 +7,11 @@ import com.evo.NEAT.config.Sim
 import examples.SineRider.Companion.HIDDEN_NODES
 import examples.SineRider.Companion.INPUTS
 import examples.SineRider.Companion.OUTPUTS
-import javolution.util.FastMap
 import javolution.util.FastSet
 import javolution.util.FastSortedMap
+import javolution.util.FastSortedTable
 import javolution.util.FastTable
+import javolution.util.function.Equality
 import kotlinx.coroutines.newFixedThreadPoolContext
 import java.io.BufferedWriter
 import java.io.FileWriter
@@ -32,7 +33,14 @@ class Genome : Comparable<Genome> {
 
     constructor(child: Genome) {
         this.connections = FastTable<ConnectionGene>()
-        this.nodes = FastSortedMap()
+        this.nodes = FastSortedTable(object : Equality<NodeGene> {
+            override fun compare(left: NodeGene, right: NodeGene): Int = left.key.compareTo(right.key)
+
+            override fun hashCodeOf(it: NodeGene) = it.key
+
+            override fun areEqual(left: NodeGene?, right: NodeGene?) = left?.key == right?.key
+        })
+
         this.mutationRates = MutationKeys.mutationRates
         for (c in child.connections) connections.add(ConnectionGene(c))
         fitness = child.fitness
@@ -51,7 +59,7 @@ class Genome : Comparable<Genome> {
     var connections: FastTable<ConnectionGene> = FastTable() // DNA- MAin archive of gene information
 
     /*@Serializable*/
-    var nodes: FastMap<Int, NodeGene> = FastMap()
+    var nodes: FastSortedTable<NodeGene> = FastSortedTable()
 
 
     // Generated while performing network operation
@@ -62,38 +70,35 @@ class Genome : Comparable<Genome> {
 
     fun generateNetwork() {
         /* Bias output layer */
-        nodes = ((List(sim.INPUTS) { i -> i to NodeGene(0.0) } +
-                (INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS).map {
-                    it to NodeGene(0.0)
-                }) +
-                (INPUTS to NodeGene(1.0) /* Bias output layer */)).toMap(FastMap())
-        // hidden layer
-        connections.forEach { con ->
-            if (!nodes.containsKey(con.into)) nodes[con.into] = NodeGene(0.0)
-            if (!nodes.containsKey(con.out)) nodes[con.out] =
-                NodeGene(0.0, FastTable<ConnectionGene>().also { it += con })
+        nodes = FastSortedTable<NodeGene>().apply {
+            for (i in 0 until INPUTS) add(NodeGene(i, 0.0))/*bias*/
+        }.apply { add(NodeGene(INPUTS, 1.0)) }.apply {
+            for (i in INPUTS + HIDDEN_NODES until INPUTS + HIDDEN_NODES + OUTPUTS) add(NodeGene(i, 0.0))
         }
 
-
+        // hidden layer
+        connections.forEach { con ->
+            if (nodes.any { it.key == con.into }) nodes += NodeGene(con.into, 0.0)
+            if (nodes.any { it.key == con.out }) nodes +=
+                NodeGene(con.out, 0.0, FastTable<ConnectionGene>().also { it += con })
+        }
     }
 
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
-        val output = DoubleArray(OUTPUTS)
         generateNetwork()
         for (i in 0 until INPUTS) nodes[i]!!.impulse = inputs[i]
-        nodes.filter { it.key > INPUTS }.forEach { (key, node) ->
+        nodes.filter { it.key > INPUTS }.forEach { node ->
             node.incomingCon.filter {
                 it.isEnabled
-            }.map { (into, out, innovation, weight, isEnabled): ConnectionGene ->
+            }.map { (into, _, _, weight, _): ConnectionGene ->
                 nodes[into]!!.impulse * weight
-            }.sum().let { sum -> node.impulse = node.activationFunction(sum) }
+            }.sum().let { sum -> node.run { impulse = activationFunction(sum) } }
 
         }
         val i1 = INPUTS + HIDDEN_NODES
-        for (i in 0 until OUTPUTS) output[i] = run {
-            nodes[i1 + i]!!.activationFunction.invoke(nodes[i1 + i]!!.impulse)
+        return DoubleArray(OUTPUTS) { i ->
+            nodes[i1 + i]!!.run { activationFunction.invoke(impulse) }
         }
-        return output
     }
 
     /*   private fun doColor(x: Double): Double {
@@ -130,16 +135,16 @@ class Genome : Comparable<Genome> {
         var node1 = -1
         var node2 = -1
 
-        for (k in nodes.keys) {
+        for (n in nodes) {
             if (random1 == i) {
-                k.also { node1 = it }
+                n.key.also { node1 = it }
                 break
             }
             i++
         }
-        for (k in nodes.keys) {
+        for (n in nodes) {
             if (random2 == j) {
-                node2 = k
+                node2 = n.key
                 break
             }
             j++
@@ -325,15 +330,14 @@ class Genome : Comparable<Genome> {
                 "mutationRates=$mutationRates, connectionGeneList={" +
                 "size=${unqLinks.size}, in=$inList, out=$outList }}}, nodes={size=${nodes.size}," +
                 "nodes=${
-                    nodes.filter {
+                    nodes.filtered {
                         it.key in allinks
                     }.map {
-                        it.value.impulse to it.value.incomingCon.size to it.value.activationFunction
+                        it.impulse to it.incomingCon.size to it.activationFunction
                     }
                 }})"
     }
 }
 
-//operator fun <V> IntObjectHashMap<V>.set(i: Int, value: V) = this.put(i, value)
-//operator fun <T> IntObjectPair<T>.component1() = one
-//operator fun <T> IntObjectPair<T>.component2() = two
+
+

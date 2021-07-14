@@ -402,9 +402,7 @@ enum class ActivationFunction {
         /**
          * This class should only be accessd via Factory.
          */
-        //        Linear() {
-        //            // no-op
-        //        }
+
         /**
          * Return `input` with no transformation.
          *
