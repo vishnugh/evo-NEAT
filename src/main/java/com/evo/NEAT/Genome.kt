@@ -13,6 +13,7 @@ import javolution.util.FastSortedMap
 import javolution.util.FastSortedTable
 import javolution.util.FastTable
 import javolution.util.function.Equality
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newFixedThreadPoolContext
 import java.io.BufferedWriter
 import java.io.FileWriter
@@ -314,8 +315,6 @@ class Genome(
             }
             return false
         }
-
-        val context = newFixedThreadPoolContext(Runtime.getRuntime().availableProcessors(), "population")
 
         lateinit var sim: Sim
         val INDEXABLE: Int by lazy { (sim).run { INPUTS + HIDDEN_NODES } }

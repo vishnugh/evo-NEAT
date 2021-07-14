@@ -2,6 +2,7 @@ package examples
 
 import com.evo.NEAT.*
 import com.evo.NEAT.config.Sim
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -30,7 +31,7 @@ class XOR : Environment {
     companion object {
 
         val xor = XOR()
-        val context = Genome.context
+        val context = Dispatchers.Main
 
         @JvmStatic
         fun main(arg0: Array<String>) {
@@ -49,7 +50,7 @@ class XOR : Environment {
 
                 if (topGenome.points > 0.94) {
 
-                    println("nodes access  hit(${ accesses.get() to ( accesses.get() -  misses.get())})/miss(${ misses.get()}) ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
+                    println("nodes access  hit(${accesses.get() to (accesses.get() - misses.get())})/miss(${misses.get()}) ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
                     println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
                     println("species : " + pool.species.size)
                     println(topGenome.toString())
