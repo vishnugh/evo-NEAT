@@ -15,8 +15,14 @@ data class NodeGene(
         activ8mFnVl.random()
     },
 ) {
+    constructor(parent: NodeGene) : this(
+        parent.key,
+        parent.impulse,
+        parent.incomingCon.map { ConnectionGene(it) }.toCollection(FastTable()),
+        parent.activationFunction
+    )
+
     companion object {
         val activ8mFnVl = ActivationFunction.values()
-
     }
 }

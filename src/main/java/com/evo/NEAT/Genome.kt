@@ -4,6 +4,7 @@ package com.evo.NEAT
 
 import com.evo.NEAT.Genome.Companion.INDEXABLE
 import com.evo.NEAT.Genome.Companion.sim
+import com.evo.NEAT.com.evo.NEAT.ActivationFunction
 import com.evo.NEAT.config.NEAT_Config
 import com.evo.NEAT.config.Sim
 import javolution.util.FastSet
@@ -45,7 +46,9 @@ class Genome(
 
     constructor(parent: Genome) : this() {
         this.connections.addAll(parent.connections)
-        this.nodes.addAll(parent.nodes)
+        this.nodes.addAll(parent.nodes.map {
+            NodeGene(it)
+        })
         fitness = parent.fitness
         adjustedFitness = parent.adjustedFitness
         mutationRates.putAll(parent.mutationRates)
@@ -59,8 +62,8 @@ class Genome(
         if (nodes.isEmpty()) {
             nodes
                 .apply { for (i in 0 until sim.INPUTS) add(NodeGene(i)) }
-                .apply { add(NodeGene(sim.INPUTS, 1.0))/*bias*/ }
-                .apply { for (i in INDEXABLE until INDEXABLE + sim.OUTPUTS) add(NodeGene(i)) }
+                .apply { add(NodeGene(sim.INPUTS, 1.0,  ).also { it.activationFunction= ActivationFunction.Linear })/*bias*/ }
+                .apply { for (i in INDEXABLE until INDEXABLE + sim.OUTPUTS) add(NodeGene(i).also { it.activationFunction= ActivationFunction.Linear } /* extra supervision  */ ) }
         }
 
         // hidden layer
@@ -77,7 +80,7 @@ class Genome(
         generateNetwork()
         for (i in 0 until sim.INPUTS) (+nodes)(i).impulse = inputs[i]
         nodes.filtered {
-            it.key > sim.INPUTS
+            it.key >= sim.INPUTS
         }.forEach { node ->
             val toDownStream = node.incomingCon.filter {
                 it.isEnabled
