@@ -3,7 +3,6 @@ package com.evo.NEAT
 import com.evo.NEAT.Genome.Companion.crossOver
 import com.evo.NEAT.config.NEAT_Config
 import javolution.util.FastTable
-import kotlinx.serialization.Serializable
 import java.util.*
 import kotlin.random.Random
 
@@ -16,7 +15,6 @@ class Species : Comparable<Species> {
     var topFitness = 0.0
         get() {
             field = topGenome.fitness
-            field = topGenome.fitness
             return field
         }
     var staleness = 0
@@ -26,9 +24,9 @@ class Species : Comparable<Species> {
         genomes.add(top)
     }
 
-    fun calculateGenomeAdjustedFitness()=  genomes.map { g ->
-            (g.fitness / genomes.size).also { g.adjustedFitness = it }
-        }.average()
+    fun calculateGenomeAdjustedFitness() = genomes.map { g ->
+        (g.fitness / genomes.size).also { g.adjustedFitness = it }
+    }.average()
 
 
     val totalAdjustedFitness: Double
@@ -46,28 +44,32 @@ class Species : Comparable<Species> {
     }
 
     fun removeWeakGenomes(allButOne: Boolean) {
+/*
         sortGenomes()
         var surviveCount = 1
         if (!allButOne) surviveCount = Math.ceil((genomes.size / 2f).toDouble()).toInt()
         val survivedGenomes = FastTable<Genome>()
         for (i in 0 until surviveCount) survivedGenomes.add(Genome(genomes[i]))
         genomes = survivedGenomes
+*/
     }
 
     @Deprecated("")
     fun removeWeakGenome(childrenToRemove: Int) {
+/*
         sortGenomes()
         val survived = FastTable<Genome>()
         for (i in 0 until genomes.size - childrenToRemove) {
-            survived.add(genomes[i])
+            survived.add(Genome(genomes[i]))
         }
         genomes = survived
+*/
     }
 
     val topGenome: Genome
         get() {
             sortGenomes()
-            return genomes[0]
+            return genomes.first()
         }
 
     fun breedChild(): Genome {
@@ -85,9 +87,9 @@ class Species : Comparable<Species> {
         return child
     }
 
-    override fun compareTo(o: Species ): Int {
+    override fun compareTo(o: Species): Int {
         val top = topFitness
-        val otherTop = (o ) .topFitness
+        val otherTop = (o).topFitness
         return if (top == otherTop) 0 else if (top > otherTop) 1 else -1
     }
 }

@@ -53,51 +53,55 @@ class XOR : Environment {
             while (true) {
                 //pool.evaluateFitness();
                 pool.evaluateFitness(xor)
-                topGenome = pool.topGenome
-                println("TopFitness : ${topGenome.points} vs ladder: $ladder by width $fidelity")
+               if(generation>2) {
+                   topGenome = pool.topGenome
+                   println("TopFitness : ${topGenome.points} vs ladder: $ladder by width $fidelity")
 
-                if (topGenome.points > ladder) {
-                    ladder = topGenome.points
-                    if (ladder == 1.0) {
-                        ladder = .1
-                        fidelity++
-                    }
-                    println("nodes access  hit(${accesses.get() to (accesses.get() - misses.get())})/miss(${misses.get()}) ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
-                    println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
-                    println("species : " + pool.species.size)
-                    println(topGenome.toString())
-                    var special: Species? = null
-                    pool.species.withIndex().forEach { (i, species) ->
-                        print("species #$i size:${species.genomes.size}")
-                        if (topGenome in species.genomes) {
-                            special = species
-                            print(" *** ")
-                        }
-                        println()
-                    }
+                   if (topGenome.points > ladder) {
+                       ladder = topGenome.points
+                       if (ladder == 1.0) {
+                           ladder = .1
+                           fidelity++
+                       }
+                       println("nodes access  hit(${accesses.get() to (accesses.get() - misses.get())})/miss(${misses.get()}) ratio ${topGenome.run { accesses.toDouble() / misses.toDouble() }}")
+                       println("GenomeAdjustedFitness: ${pool.calculateGenomeAdjustedFitness()}")
+                       println("species : " + pool.species.size)
+                       println(topGenome.toString())
+                       var special: Species? = null
+                       pool.species.withIndex().forEach { (i, species) ->
+                           print("species #$i size:${species.genomes.size}")
+                           if (topGenome in species.genomes) {
+                               special = species
+                               print(" *** ")
+                           }
+                           println()
+                       }
 
-                    if (champions.size > 10) {
-                        val mutableList =
-                            champions.sortedByDescending { it.points }.  dropLast(Random.nextInt(0,champions.size)) .toMutableList()
-                        champions = mutableList
+                       if (champions.size > 10) {
+                           val mutableList =
+                               champions.sortedByDescending { it.points }.dropLast(Random.nextInt(0, champions.size))
+                                   .toMutableList()
+                           champions = mutableList
 
-                    }
-                    champions.add(Genome(topGenome.also {
-                        it.points =topGenome.points}))
-                    topGenome.mutationRates[PERTURB_CHANCE] = 0.0
-                    topGenome.mutationRates[WEIGHT_CHANCE] = 0.0
-                    topGenome.mutationRates[WEIGHT_MUTATION_CHANCE] = 0.0
-                    topGenome.mutationRates[NODE_MUTATION_CHANCE] = 0.0
-                    topGenome.mutationRates[CONNECTION_MUTATION_CHANCE] = 0.0
-                    topGenome.mutationRates[BIAS_CONNECTION_MUTATION_CHANCE] = 0.0
-                    topGenome.mutationRates[DISABLE_MUTATION_CHANCE] = 0.0
-                    topGenome.mutationRates[ENABLE_MUTATION_CHANCE] = 0.0
+                       }
+                       champions.add(Genome(topGenome.also {
+                           it.points = topGenome.points
+                       }))
+                       topGenome.mutationRates[PERTURB_CHANCE] = 0.0
+                       topGenome.mutationRates[WEIGHT_CHANCE] = 0.0
+                       topGenome.mutationRates[WEIGHT_MUTATION_CHANCE] = 0.0
+                       topGenome.mutationRates[NODE_MUTATION_CHANCE] = 0.0
+                       topGenome.mutationRates[CONNECTION_MUTATION_CHANCE] = 0.0
+                       topGenome.mutationRates[BIAS_CONNECTION_MUTATION_CHANCE] = 0.0
+                       topGenome.mutationRates[DISABLE_MUTATION_CHANCE] = 0.0
+                       topGenome.mutationRates[ENABLE_MUTATION_CHANCE] = 0.0
 
-                    //single-survivor with no variance is a bad idea.
+                       //single-survivor with no variance is a bad idea.
 
 //                    pool.species = mutableListOf(Species().also { it.genomes += (topGenome) })
 
-                }
+                   }
+               }
                 pool.species.apply {
                     if (size > 5) pool.species = dropLast(size / 2).toMutableList()
                     forEach {

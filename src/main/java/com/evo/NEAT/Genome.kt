@@ -45,15 +45,16 @@ class Genome(
 //    mutationRates = MutationKeys.mutationRates
 
     constructor(parent: Genome) : this() {
-        this.connections.addAll(parent.connections)
-        this.nodes.addAll(parent.nodes.map {
-            NodeGene(it)
-        })
+        parent.connections.mapTo(connections) { ConnectionGene(it) }
+        parent.nodes.mapTo(this.nodes) {
+            NodeGene(it.takeUnless { (it.key == sim.INPUTS) }?: INPUTBIAS)
+        }
         fitness = parent.fitness
         adjustedFitness = parent.adjustedFitness
         mutationRates.putAll(parent.mutationRates)
         points = parent.points
     }
+
 
     /* var color: ActivationFunction = ActivationFunction.values().random()*/
 
@@ -62,8 +63,12 @@ class Genome(
         if (nodes.isEmpty()) {
             nodes
                 .apply { for (i in 0 until sim.INPUTS) add(NodeGene(i)) }
-                .apply { add(NodeGene(sim.INPUTS, 1.0,  ).also { it.activationFunction= ActivationFunction.Linear })/*bias*/ }
-                .apply { for (i in INDEXABLE until INDEXABLE + sim.OUTPUTS) add(NodeGene(i).also { it.activationFunction= ActivationFunction.Linear } /* extra supervision  */ ) }
+                .apply { add(INPUTBIAS) }
+                .apply {
+                    for (i in INDEXABLE until INDEXABLE + sim.OUTPUTS) add(NodeGene(i).also {
+                        it.activationFunction = ActivationFunction.Linear
+                    } /* extra supervision  */)
+                }
         }
 
         // hidden layer
@@ -90,7 +95,7 @@ class Genome(
                 val res = impulse * weight
                 res
             }
-            var final:Double
+            var final: Double
             toDownStream.sum().let { sum ->
                 node.run {
                     final = activationFunction(sum)
@@ -101,7 +106,7 @@ class Genome(
         }
 
         return DoubleArray(sim.OUTPUTS) { i ->
-            (-nodes)(INDEXABLE + i) .impulse
+            (-nodes)(INDEXABLE + i).impulse
         }
     }
 
@@ -259,6 +264,19 @@ class Genome(
         val rand = Random
         val innovation = AtomicInteger(0)
 
+        val INPUTBIAS by lazy {
+            object : NodeGene(sim.INPUTS, 1.0, FastTable(), ActivationFunction.Linear) {
+                override val key get() = Genome.sim.INPUTS
+                override var impulse
+                    get() = 1.0
+                    set(value) {}
+                override var activationFunction
+                    get() = ActivationFunction.Linear
+                    set(value) {}
+
+            }
+        }
+
         @JvmStatic
         fun crossOver(p1: Genome, p2: Genome): Genome {
             var parent1 = p1
@@ -340,6 +358,7 @@ class Genome(
                     }
                 }})"
     }
+
 }
 
 inline operator fun FastSortedTable<NodeGene>.unaryMinus() = { x: Int -> this.filtered { x == it.key }.first() }

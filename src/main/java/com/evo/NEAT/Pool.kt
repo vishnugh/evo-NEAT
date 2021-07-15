@@ -75,7 +75,8 @@ class Pool {
 
     fun calculateGenomeAdjustedFitness() = species.map(Species::calculateGenomeAdjustedFitness).average()
 
-    fun breedNewGeneration(): FastTable<Genome> {
+    fun breedNewGeneration(): FastTable<Genome> {//TODO:simplify
+
         calculateGenomeAdjustedFitness()
         val survived = FastTable<Species>()
         removeWeakGenomesFromSpecies(false)
