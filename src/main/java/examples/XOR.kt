@@ -36,7 +36,10 @@ class XOR : Environment {
 
         @JvmStatic
         fun main(arg0: Array<String>) {
-            Genome.sim = Sim(2, 20, 1, 1000000, 1500, 3)
+            Genome.sim = object:Sim(2, 20, 1, 1000000, 1, 3){
+                override val POPULATION:Int get() = generation*2
+
+            }}
             val pool = Pool()
             pool.initializePool()
             var topGenome: Genome
@@ -80,8 +83,18 @@ class XOR : Environment {
                     topGenome.mutationRates[DISABLE_MUTATION_CHANCE] = 0.0
                     topGenome.mutationRates[ENABLE_MUTATION_CHANCE] = 0.0
 
-                    pool.species = mutableListOf(special!!)
+                    pool.species = mutableListOf(Species().also { it.genomes += (topGenome) })
 
+                } else {
+
+                    pool.species.apply {
+                        if (size > 5) dropLast(size / 2)
+                        forEach {
+                            it.genomes.apply {
+                                if (size > 5) dropLast(size / 2)
+                            }
+                        }
+                    }
                 }
 
                 println("Generation : ${generation to pool.currentPopulation to "Species: ${pool.species.size}"} ")
