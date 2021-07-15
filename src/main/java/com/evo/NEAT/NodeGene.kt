@@ -10,23 +10,39 @@ import kotlin.random.Random
  * Created by vishnughosh on 28/02/17.
  *//*@Serializable*/
 open class NodeGene @JvmOverloads constructor(
-    open val key: Int, open var impulse: Double = Random.nextDouble(),
-    var incomingCon: FastTable<ConnectionGene> = FastTable(),
-    open var activationFunction: ActivationFunction = if (    !((Genome.sim.INPUTS+1)until Genome.INDEXABLE ).contains(key) ) ActivationFunction.Linear else {
+    open val key: Int,
+    impulse1: Double = Random.nextDouble(),
+    var incomingCon: FastTable<ConnectionGene> = if (key  <= sim.INPUTS) DUMMY else FastTable<ConnectionGene>(),
+    activationFunction1: ActivationFunction = if (!((sim.INPUTS + 1) until Genome.INDEXABLE).contains(key)) ActivationFunction.Linear else {
         activ8mFnVl.random()
     },
 ) {
-    init{
 
 
-    }
+    open var impulse: Double = impulse1
+        get() = if (key == sim.INPUTS) 1.0 else field
+
+
+    open var activationFunction = activationFunction1
+
     constructor(parent: NodeGene) : this(
         parent.key,
-        parent.impulse,
+        parent.impulse.takeUnless { parent.key == sim.INPUTS } ?: 1.0,
         parent.incomingCon.mapTo(FastTable<ConnectionGene>()) { ConnectionGene(it) },
         parent.activationFunction
     )
+
     companion object {
+        val DUMMY by lazy {
+            object : FastTable<ConnectionGene>() {init {
+                unmodifiable()
+            }
+
+                override fun toString(): String {
+                    return "DUMMYCOLLECTION"
+                }
+            }
+        }
         val activ8mFnVl = ActivationFunction.values()
     }
 

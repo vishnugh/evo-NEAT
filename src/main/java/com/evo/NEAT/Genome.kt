@@ -273,7 +273,6 @@ class Genome(
                 override var activationFunction
                     get() = ActivationFunction.Linear
                     set(value) {}
-
             }
         }
 
