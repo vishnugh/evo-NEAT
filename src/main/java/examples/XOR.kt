@@ -6,6 +6,8 @@ import com.evo.NEAT.config.Sim
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlin.math.ceil
+import kotlin.math.max
 import kotlin.random.Random
 
 /**
@@ -17,7 +19,7 @@ class XOR : Environment {
         runBlocking {
             for (gene in population)
                 launch {
-                    gene.fitness = DoubleArray(fidelity) {
+                    gene.fitness = DoubleArray(max(1,fidelity/*Random.nextInt((fidelity*.90).toInt(), fidelity)*/)) {
                         val (i, j) = (Random.nextBoolean()) to (Random.nextBoolean())
                         val inputs = doubleArrayOf(if (i) 1.0 else 0.0, if (j) 1.0 else 0.0)
                         val output = gene.evaluateNetwork(inputs)
@@ -32,21 +34,22 @@ class XOR : Environment {
     companion object {
         var fidelity = 1
 
+        var generation = 0
         val xor = XOR()
 
         @JvmStatic
         fun main(arg0: Array<String>) {
-            Genome.sim = object:Sim(2, 20, 1, 1000000, 1, 3){
-                override val POPULATION:Int get() = generation*2
+            Genome.sim = object : Sim(2, 20, 1, 1000000, 100, 3) {
+                override val POPULATION: Int get() = max(generation * 2, (INPUTS + OUTPUTS + 2)*5)
 
-            }}
+            }
+
             val pool = Pool()
             pool.initializePool()
             var topGenome: Genome
 
             var ladder = 0.1
 
-            var generation = 0
             while (true) {
                 //pool.evaluateFitness();
                 pool.evaluateFitness(xor)
@@ -83,9 +86,11 @@ class XOR : Environment {
                     topGenome.mutationRates[DISABLE_MUTATION_CHANCE] = 0.0
                     topGenome.mutationRates[ENABLE_MUTATION_CHANCE] = 0.0
 
-                    pool.species = mutableListOf(Species().also { it.genomes += (topGenome) })
+                    //single-survivor with no variance is a bad idea.
 
-                } else {
+//                    pool.species = mutableListOf(Species().also { it.genomes += (topGenome) })
+
+                }
 
                     pool.species.apply {
                         if (size > 5) dropLast(size / 2)
@@ -93,7 +98,6 @@ class XOR : Environment {
                             it.genomes.apply {
                                 if (size > 5) dropLast(size / 2)
                             }
-                        }
                     }
                 }
 
