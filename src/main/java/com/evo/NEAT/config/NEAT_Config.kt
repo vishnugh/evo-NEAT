@@ -12,11 +12,5 @@ object NEAT_Config {
     const val STEPS = 0.1
     const val PERTURB_CHANCE = 0.9
     const val WEIGHT_CHANCE = 0.3
-    const val WEIGHT_MUTATION_CHANCE = 0.9
-    const val NODE_MUTATION_CHANCE = 0.1
-    const val CONNECTION_MUTATION_CHANCE = 0.1
-    const val BIAS_CONNECTION_MUTATION_CHANCE = 0.15
-    const val DISABLE_MUTATION_CHANCE = 0.1
-    const val ENABLE_MUTATION_CHANCE = 0.2
     const val CROSSOVER_CHANCE = 0.75
 }

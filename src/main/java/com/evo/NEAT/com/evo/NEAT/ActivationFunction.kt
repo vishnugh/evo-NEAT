@@ -408,9 +408,8 @@ enum class ActivationFunction {
          *
          apply
          */
-        override fun invoke(input: Double): Double {
-            return input
-        }
+        override fun invoke(input: Double): Double =input
+
 
         override fun applyDiff(input: Double): Double {
             return 1.0

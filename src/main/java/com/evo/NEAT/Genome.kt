@@ -2,8 +2,6 @@
 
 package com.evo.NEAT
 
-//import org.eclipse.collections.api.tuple.primitive.IntObjectPair
-//import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap
 import com.evo.NEAT.Genome.Companion.INDEXABLE
 import com.evo.NEAT.Genome.Companion.sim
 import com.evo.NEAT.config.NEAT_Config
@@ -13,8 +11,6 @@ import javolution.util.FastSortedMap
 import javolution.util.FastSortedTable
 import javolution.util.FastTable
 import javolution.util.function.Equality
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.newFixedThreadPoolContext
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
@@ -30,8 +26,7 @@ import kotlin.random.Random
  */
 /*@Serializable*/
 class Genome(
-// Generated while performing network operation
-/*@Serializable*/
+    /*@Serializable*/
     val nodes: FastSortedTable<NodeGene> = FastSortedTable<NodeGene>(object : Equality<NodeGene> {
         override fun compare(left: NodeGene, right: NodeGene): Int = left.key.compareTo(right.key)
         override fun hashCodeOf(it: NodeGene) = it.key
@@ -41,47 +36,49 @@ class Genome(
     val mutationRates: MutableMap<MutationKeys, Double> = EnumMap(MutationKeys.mutationRates),
     /** Global Percentile Rank (higher the better)*/
     var fitness: Double = 0.0,
-    var points: Double = 0.0,// Can remove below setter-getter after testing
-    val connections: FastTable<ConnectionGene> = FastTable(), // DNA- MAin archive of gene information// For number of child to breed in species
+    var points: Double = 0.0,
+    val connections: FastTable<ConnectionGene> = FastTable(),
     var adjustedFitness: Double = 0.0,
 ) : Comparable<Genome> {
 
 //    mutationRates = MutationKeys.mutationRates
 
-    constructor(child: Genome) : this() {
-        this.connections.addAll(child.connections)
-        fitness = child.fitness
-        adjustedFitness = child.adjustedFitness
-        mutationRates.putAll(child.mutationRates)
-//        color = child.color
+    constructor(parent: Genome) : this() {
+        this.connections.addAll(parent.connections)
+        this.nodes.addAll(parent.nodes)
+        fitness = parent.fitness
+        adjustedFitness = parent.adjustedFitness
+        mutationRates.putAll(parent.mutationRates)
+        points=parent.points
     }
 
     /* var color: ActivationFunction = ActivationFunction.values().random()*/
 
     fun generateNetwork() {//TODO: dirty flag
 
-        if (nodes.isEmpty())  {
+        if (nodes.isEmpty()) {
             nodes
                 .apply { for (i in 0 until sim.INPUTS) add(NodeGene(i)) }
                 .apply { add(NodeGene(sim.INPUTS, 1.0))/*bias*/ }
-                .apply { for (i in Companion.INDEXABLE until Companion.INDEXABLE + sim.OUTPUTS) add(NodeGene(i, 0.0)) }
+                .apply { for (i in INDEXABLE until INDEXABLE + sim.OUTPUTS) add(NodeGene(i)) }
         }
 
         // hidden layer
         connections.forEach { con ->
-            if (!nodes.any { it.key == con.keyInto }) nodes.addLast(NodeGene(con.keyInto, 0.0))
+            if (!nodes.any { it.key == con.keyInto }) nodes.addLast(NodeGene(con.keyInto ))
             if (!nodes.any { it.key == con.keyOut }) nodes.addLast(
-                NodeGene(con.keyOut, 0.0, FastTable<ConnectionGene>().also { it += con }))
+                NodeGene(con.keyOut, con.weight, FastTable<ConnectionGene>().also { it += ConnectionGene(con) }))
         }
         assert(true)
     }
 
 
-
     fun evaluateNetwork(inputs: DoubleArray): DoubleArray {
         generateNetwork()
         for (i in 0 until sim.INPUTS) (+nodes)(i).impulse = inputs[i]
-        nodes.filtered { it.key > sim.INPUTS }.forEach { node ->
+        nodes.filtered {
+            it.key > sim.INPUTS
+        }.forEach { node ->
             node.incomingCon.filter {
                 it.isEnabled
             }.map { (into, _, _, weight, _): ConnectionGene ->
@@ -336,7 +333,7 @@ inline operator fun FastSortedTable<NodeGene>.unaryMinus() = { x: Int -> this.fi
 val misses = AtomicInteger(0)
 val accesses = AtomicInteger(0)
 inline operator fun FastSortedTable<NodeGene>.unaryPlus() = { x: Int ->
-    accesses.getAndIncrement().let{
+    accesses.getAndIncrement().let {
         if (x > INDEXABLE) (-this)(x) else
             this[x].takeIf { sim.INPUTS >= x || x == it.key }
                 ?: (-this)(x).also { misses.getAndIncrement() }

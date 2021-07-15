@@ -1,5 +1,7 @@
 package com.evo.NEAT
 
+import kotlin.random.Random
+
 /**
  * ConnectionGene Represents the connection(Axon) of the neuron
  * ConnectionGenes can completely represent the neuron as Nodes are generated while performing operation
@@ -9,7 +11,7 @@ data class ConnectionGene(
     var keyInto: Int = 0,
     var keyOut: Int = 0,
     var innovationKey: Int = 0,
-    var weight: Double = 0.0,
+    var weight: Double = Random.nextDouble(),
     var isEnabled: Boolean = false,
 ) {
     // Copy

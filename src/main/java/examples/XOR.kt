@@ -6,7 +6,6 @@ import com.evo.NEAT.config.Sim
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -19,31 +18,32 @@ class XOR : Environment {
         runBlocking {
             for (gene in population)
                 launch {
-                    gene.fitness = DoubleArray(max(1,fidelity/*Random.nextInt((fidelity*.90).toInt(), fidelity)*/)) {
-                        val (i, j) = (Random.nextBoolean()) to (Random.nextBoolean())
-                        val inputs = doubleArrayOf(if (i) 1.0 else 0.0, if (j) 1.0 else 0.0)
-                        val output = gene.evaluateNetwork(inputs)
-                        val expected = if (i xor j) 1.0 else 0.0
-                        (1.0 - kotlin.math.abs(expected - output[0]))
+                    gene.fitness = DoubleArray(max(1, fidelity )) {
+                        BooleanArray(2) { (Random.nextBoolean()) }.let { inn ->
+                            val inputs = DoubleArray(2) { if (inn[it]) 1.0 else 0.0 }
+                            val output = gene.evaluateNetwork(inputs)
+                            val expected = if (inn[0].xor(inn[1])) 1.0 else 0.0
+                            1.0 - kotlin.math.abs(expected - output[0])
+                        }
                     }.average()
                 }
         }
     }
 
-
     companion object {
         var fidelity = 1
 
-        var generation = 0
+        var generation = 1
         val xor = XOR()
 
         @JvmStatic
         fun main(arg0: Array<String>) {
             Genome.sim = object : Sim(2, 20, 1, 1000000, 100, 3) {
-                override val POPULATION: Int get() = max(generation * 2, (INPUTS + OUTPUTS + 2)*5)
+                override val POPULATION: Int get() = max(generation * 2, (INPUTS + OUTPUTS + 2) * 5)
 
             }
 
+            var champions: MutableList<Genome> = mutableListOf()
             val pool = Pool()
             pool.initializePool()
             var topGenome: Genome
@@ -76,7 +76,14 @@ class XOR : Environment {
                         println()
                     }
 
+                    if (champions.size > 10) {
+                        val mutableList =
+                            champions.sortedByDescending { it.points }.  dropLast(Random.nextInt(0,champions.size)) .toMutableList()
+                        champions = mutableList
 
+                    }
+                    champions.add(Genome(topGenome.also {
+                        it.points =topGenome.points}))
                     topGenome.mutationRates[PERTURB_CHANCE] = 0.0
                     topGenome.mutationRates[WEIGHT_CHANCE] = 0.0
                     topGenome.mutationRates[WEIGHT_MUTATION_CHANCE] = 0.0
@@ -91,14 +98,15 @@ class XOR : Environment {
 //                    pool.species = mutableListOf(Species().also { it.genomes += (topGenome) })
 
                 }
-
-                    pool.species.apply {
-                        if (size > 5) dropLast(size / 2)
-                        forEach {
-                            it.genomes.apply {
-                                if (size > 5) dropLast(size / 2)
-                            }
+                pool.species.apply {
+                    if (size > 5) pool.species = dropLast(size / 2).toMutableList()
+                    forEach {
+                        it.genomes.also { mutableList ->
+                            if (mutableList.size > 5) it.genomes =
+                                mutableList.dropLast(mutableList.size / 2).toMutableList()
+                        }
                     }
+                    if (Random.nextBoolean() && champions.isNotEmpty()) pool.addToSpecies(champions.random())
                 }
 
                 println("Generation : ${generation to pool.currentPopulation to "Species: ${pool.species.size}"} ")
