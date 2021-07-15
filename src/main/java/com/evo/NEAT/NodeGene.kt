@@ -11,7 +11,7 @@ import kotlin.random.Random
 data class NodeGene(
     val key: Int, var impulse: Double = Random.nextDouble(),
     var incomingCon: FastTable<ConnectionGene> = FastTable(),
-    var activationFunction: ActivationFunction = if (key > Genome.INDEXABLE) ActivationFunction.Linear else {
+    var activationFunction: ActivationFunction = if (Genome.INDEXABLE <= key) ActivationFunction.Linear else {
         activ8mFnVl.random()
     },
 ) {

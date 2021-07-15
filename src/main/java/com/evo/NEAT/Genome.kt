@@ -49,7 +49,7 @@ class Genome(
         fitness = parent.fitness
         adjustedFitness = parent.adjustedFitness
         mutationRates.putAll(parent.mutationRates)
-        points=parent.points
+        points = parent.points
     }
 
     /* var color: ActivationFunction = ActivationFunction.values().random()*/
@@ -65,7 +65,7 @@ class Genome(
 
         // hidden layer
         connections.forEach { con ->
-            if (!nodes.any { it.key == con.keyInto }) nodes.addLast(NodeGene(con.keyInto ))
+            if (!nodes.any { it.key == con.keyInto }) nodes.addLast(NodeGene(con.keyInto))
             if (!nodes.any { it.key == con.keyOut }) nodes.addLast(
                 NodeGene(con.keyOut, con.weight, FastTable<ConnectionGene>().also { it += ConnectionGene(con) }))
         }
@@ -79,16 +79,26 @@ class Genome(
         nodes.filtered {
             it.key > sim.INPUTS
         }.forEach { node ->
-            node.incomingCon.filter {
+            val toDownStream = node.incomingCon.filter {
                 it.isEnabled
-            }.map { (into, _, _, weight, _): ConnectionGene ->
-                (+nodes)(into).impulse * weight
-            }.sum().let { sum -> node.run { impulse = activationFunction(sum) } }
-
+            }.map { (inKey, _, _, weight, _): ConnectionGene ->
+                val upstreamNode = (+nodes)(inKey)
+                val impulse = upstreamNode.impulse
+                val res = impulse * weight
+                res
+            }
+            var final:Double
+            toDownStream.sum().let { sum ->
+                node.run {
+                    final = activationFunction(sum)
+                    impulse = final
+                }
+            }
+            assert(true)
         }
-        val i1 = sim.INPUTS + sim.HIDDEN_NODES
+
         return DoubleArray(sim.OUTPUTS) { i ->
-            (-nodes)(i1 + i).run { activationFunction.invoke(impulse) }
+            (-nodes)(INDEXABLE + i) .impulse
         }
     }
 
