@@ -46,8 +46,8 @@ class Genome(
 
     constructor(parent: Genome) : this() {
         parent.connections.mapTo(connections) { ConnectionGene(it) }
-        parent.nodes.mapTo(this.nodes) {
-            NodeGene(it.takeUnless { (it.key == sim.INPUTS) }?: INPUTBIAS)
+        parent.nodes.sorted(compareBy { it.key }).mapTo(this.nodes) {
+            NodeGene(it.takeUnless { (it.key == sim.INPUTS) } ?: INPUTBIAS)
         }
         fitness = parent.fitness
         adjustedFitness = parent.adjustedFitness
@@ -342,20 +342,23 @@ class Genome(
     }
 
     override fun toString(): String {
-        val unqLinks = connections.filter { it.isEnabled }
-        val inList: List<Int> = unqLinks.map { it.keyInto }.distinct()
-        val outList: List<Int> = unqLinks.map { it.keyOut }.distinct()
-        val allinks: List<Int> = inList + outList
+
         return "Genome(fitness=$fitness, points=$points, adjustedFitness=$adjustedFitness," +
-                "mutationRates=$mutationRates, connectionGeneList={" +
-                "size=${unqLinks.size}, in=$inList, out=$outList }}}, nodes={size=${nodes.size}," +
+                " connectionGeneList={" +
+                "size=${connections.size}, io: ${
+                    connections.mapped {
+                        it.keyInto.toString() + when (it.isEnabled) {
+                            false -> "∅"
+                            else -> "→"
+                        } + it.keyOut.toString()
+
+                    }.joinToString(" ")
+                } }}}, nodes={size=${nodes.size}," +
                 "nodes=${
-                    nodes.filtered {
-                        it.key in allinks
-                    }.map {
+                    nodes.filtered {it.key >sim.INPUTS&&it.key< INDEXABLE}.map {
                         it.impulse to it.incomingCon.size to it.activationFunction
                     }
-                }})"
+                }}, mutationRates=$mutationRates,)"
     }
 
 }
